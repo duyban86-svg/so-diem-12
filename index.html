@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sổ Điểm Khối 12 - Năm Học 2026-2027</title>
+  <title>Sổ Điểm & Đánh Giá - Năm Học 2026-2027</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts: Plus Jakarta Sans -->
@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- Danh sách học sinh cố định (149 học sinh) -->
+  <!-- Danh sách học sinh chính thức năm học 2026-2027 (59 lớp - 2.881 học sinh) -->
   <script src="students.js"></script>
   <style>
     body {
@@ -46,14 +46,21 @@
     <div class="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-slate-800 relative z-20">
       
       <!-- Chọn Lớp Học -->
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2">
         <label class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-          <i data-lucide="school" class="w-4 h-4 text-indigo-400"></i> LỚP:
+          <i data-lucide="school" class="w-4 h-4 text-indigo-400"></i> CHỌN LỚP:
         </label>
-        <div class="inline-flex p-1 bg-slate-950 rounded-xl border border-slate-700/80">
-          <button type="button" onclick="selectClass('12A08')" id="classBtn-12A08" class="class-btn px-3 py-1 text-xs font-bold rounded-lg transition bg-indigo-600 text-white shadow">12A08</button>
-          <button type="button" onclick="selectClass('12A13')" id="classBtn-12A13" class="class-btn px-3 py-1 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white">12A13</button>
-          <button type="button" onclick="selectClass('12A21')" id="classBtn-12A21" class="class-btn px-3 py-1 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white">12A21</button>
+        <div class="relative">
+          <select 
+            id="classSelect" 
+            onchange="selectClass(this.value)" 
+            class="bg-slate-950 text-indigo-300 font-bold border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer pr-8 appearance-none shadow"
+          >
+            <!-- Sẽ được tạo tự động từ CLASSES_LIST -->
+          </select>
+          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+          </div>
         </div>
       </div>
 
@@ -84,14 +91,20 @@
             </span>
           </div>
           <h1 class="text-xl sm:text-2xl font-extrabold text-white mt-1">HỆ THỐNG NHẬP ĐIỂM & ĐÁNH GIÁ</h1>
-          <p class="text-xs sm:text-sm text-slate-400">Tuần 1 từ 07/09/2026 • Danh sách 149 học sinh</p>
+          <p class="text-xs sm:text-sm text-slate-400">Năm học 2026 - 2027 • 59 Lớp • 2.881 Học sinh</p>
         </div>
       </div>
       
       <!-- Sĩ số -->
-      <div class="flex items-center gap-2 bg-slate-800/80 border border-slate-700/60 px-3.5 py-2 rounded-xl text-xs text-slate-300">
-        <i data-lucide="users" class="w-4 h-4 text-indigo-400"></i>
-        <span>Sĩ số: <strong class="text-white" id="totalStudentsCount">149</strong> HS</span>
+      <div class="flex flex-col sm:flex-row items-center gap-2 bg-slate-800/80 border border-slate-700/60 px-3.5 py-2 rounded-xl text-xs text-slate-300">
+        <div class="flex items-center gap-1.5">
+          <i data-lucide="users" class="w-4 h-4 text-indigo-400"></i>
+          <span>Sĩ số lớp: <strong class="text-amber-300 font-bold" id="currentClassCount">0</strong> HS</span>
+        </div>
+        <span class="hidden sm:inline text-slate-500">•</span>
+        <div class="text-[11px] text-slate-400">
+          Tổng: <strong class="text-white" id="totalStudentsCount">0</strong> HS
+        </div>
       </div>
     </div>
 
@@ -180,28 +193,26 @@
             </div>
           </div>
 
-          <!-- Mức điểm cộng -->
+          <!-- Ô Nhập Điểm -->
           <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-4">
-            <label class="block text-xs font-semibold text-slate-300 mb-2.5">
-              Mức Điểm Cộng (+) *
+            <label class="block text-xs font-bold text-slate-200 mb-1.5 flex items-center gap-1.5">
+              <i data-lucide="edit-3" class="w-4 h-4 text-indigo-400"></i> NHẬP ĐIỂM VÀO ĐÂY *
             </label>
-            <div class="flex flex-wrap items-center gap-2 mb-3">
-              <button type="button" onclick="setBonusScore('tuan', 0.25)" class="px-3 py-1.5 bg-slate-800 hover:bg-indigo-600 rounded-lg text-xs font-bold transition">+0.25</button>
-              <button type="button" onclick="setBonusScore('tuan', 0.5)" class="px-3 py-1.5 bg-slate-800 hover:bg-indigo-600 rounded-lg text-xs font-bold transition">+0.5</button>
-              <button type="button" onclick="setBonusScore('tuan', 1.0)" class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold transition">+1.0</button>
-              <button type="button" onclick="setBonusScore('tuan', 1.5)" class="px-3 py-1.5 bg-slate-800 hover:bg-indigo-600 rounded-lg text-xs font-bold transition">+1.5</button>
-              <button type="button" onclick="setBonusScore('tuan', 2.0)" class="px-3 py-1.5 bg-slate-800 hover:bg-indigo-600 rounded-lg text-xs font-bold transition">+2.0</button>
+            <p class="text-[11px] font-medium text-amber-300/90 mb-3 leading-relaxed">
+              NHẬP SỐ HOẶC SỐ THẬP PHÂN TỪ 0,25, SỬ DỤNG DẤU PHẨY ĐỂ NHẬP SỐ THẬP PHÂN.
+            </p>
+            <div class="flex items-center gap-3">
+              <input 
+                type="text" 
+                id="tuanScore" 
+                inputmode="decimal"
+                placeholder="VD: 0,25 hoặc 1,5 hoặc 10..." 
+                value="1,0" 
+                required 
+                class="w-full sm:w-64 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              />
+              <span class="text-xs text-slate-400 font-medium">Giá trị từ 0,25 đến 100</span>
             </div>
-            <input 
-              type="number" 
-              id="tuanScore" 
-              step="0.1" 
-              min="0.1" 
-              max="10" 
-              value="1.0" 
-              required 
-              class="w-full sm:w-48 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white font-bold text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-            />
           </div>
 
           <!-- Ghi chú / Lý do -->
@@ -590,29 +601,77 @@
     let activeTab = 'tuan';
 
     document.addEventListener('DOMContentLoaded', () => {
+      initClassSelector();
       selectClass(currentClass);
       initWeeks();
-      initGroupMembers();
       updateAllLockUI();
-      document.getElementById('totalStudentsCount').innerText = STUDENTS_LIST.length;
+      document.getElementById('totalStudentsCount').innerText = STUDENTS_LIST.length.toLocaleString('vi-VN');
       lucide.createIcons();
     });
 
-    // 1. CHỌN LỚP
+    // 1. KHỞI TẠO & CHỌN LỚP
+    function initClassSelector() {
+      const select = document.getElementById('classSelect');
+      select.innerHTML = '';
+
+      const groups = {
+        'Khối 10': CLASSES_LIST.filter(c => c.startsWith('10')),
+        'Khối 11': CLASSES_LIST.filter(c => c.startsWith('11')),
+        'Khối 12': CLASSES_LIST.filter(c => c.startsWith('12'))
+      };
+
+      Object.keys(groups).forEach(grpName => {
+        const list = groups[grpName];
+        if (list.length > 0) {
+          const optGroup = document.createElement('optgroup');
+          optGroup.label = `${grpName} (${list.length} Lớp)`;
+          list.forEach(cls => {
+            const opt = document.createElement('option');
+            opt.value = cls;
+            opt.innerText = `Lớp ${cls}`;
+            optGroup.appendChild(opt);
+          });
+          select.appendChild(optGroup);
+        }
+      });
+
+      if (!CLASSES_LIST.includes(currentClass)) {
+        currentClass = CLASSES_LIST[0] || '10A01';
+      }
+      select.value = currentClass;
+    }
+
     function selectClass(className) {
+      if (!CLASSES_LIST.includes(className)) {
+        className = CLASSES_LIST[0] || '10A01';
+      }
       currentClass = className;
       localStorage.setItem('app_selected_class', className);
 
-      document.querySelectorAll('.class-btn').forEach(btn => {
-        btn.className = "class-btn px-3 py-1 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white";
-      });
-
-      const activeBtn = document.getElementById(`classBtn-${className}`);
-      if (activeBtn) {
-        activeBtn.className = "class-btn px-3 py-1 text-xs font-bold rounded-lg transition bg-indigo-600 text-white shadow";
+      const select = document.getElementById('classSelect');
+      if (select && select.value !== className) {
+        select.value = className;
       }
 
       document.getElementById('currentClassTag').innerText = `LỚP ${className}`;
+
+      const classStudents = STUDENTS_LIST.filter(s => s.lop === className);
+      const countEl = document.getElementById('currentClassCount');
+      if (countEl) countEl.innerText = classStudents.length;
+
+      // Xóa thông tin học sinh cũ khi đổi lớp
+      ['tuan', 'kt'].forEach(p => {
+        const inputSearch = document.getElementById(`${p}StudentSearch`);
+        const inputStt = document.getElementById(`${p}StudentStt`);
+        const inputName = document.getElementById(`${p}StudentName`);
+        const dropdown = document.getElementById(`${p}Dropdown`);
+        if (inputSearch) inputSearch.value = '';
+        if (inputStt) inputStt.value = '';
+        if (inputName) inputName.value = '';
+        if (dropdown) dropdown.classList.add('hidden');
+      });
+
+      initGroupMembers();
     }
 
     // 2. TẠO 35 TUẦN TỪ 07/09/2026
@@ -775,7 +834,7 @@
       lucide.createIcons();
     }
 
-    // 5. TÌM KIẾM HỌC SINH
+    // 5. TÌM KIẾM HỌC SINH THEO LỚP
     function showStudentDropdown(prefix) {
       filterStudentSearch(prefix);
       document.getElementById(`${prefix}Dropdown`).classList.remove('hidden');
@@ -786,14 +845,18 @@
       const dropdown = document.getElementById(`${prefix}Dropdown`);
       dropdown.innerHTML = '';
 
-      const filtered = STUDENTS_LIST.filter(hs => {
-        return hs.stt.toString().includes(q) || hs.name.toLowerCase().includes(q);
+      const classStudents = STUDENTS_LIST.filter(hs => hs.lop === currentClass);
+      const filtered = classStudents.filter(hs => {
+        if (!q) return true;
+        return hs.stt.toString().includes(q) || 
+               hs.name.toLowerCase().includes(q) || 
+               (hs.maHS && hs.maHS.toLowerCase().includes(q));
       });
 
       if (filtered.length === 0) {
-        dropdown.innerHTML = `<div class="p-2 text-xs text-slate-500 text-center">Không tìm thấy học sinh phù hợp</div>`;
+        dropdown.innerHTML = `<div class="p-2.5 text-xs text-slate-500 text-center">Không tìm thấy học sinh trong lớp ${currentClass}</div>`;
       } else {
-        filtered.slice(0, 30).forEach(hs => {
+        filtered.slice(0, 50).forEach(hs => {
           const div = document.createElement('div');
           div.className = 'flex items-center justify-between p-2 rounded-lg hover:bg-indigo-600/30 hover:border-indigo-500/40 border border-transparent cursor-pointer transition text-xs';
           div.innerHTML = `
@@ -832,11 +895,14 @@
       document.getElementById(`${prefix}Note`).value = text;
     }
 
-    // 6. KHỞI TẠO & QUẢN LÝ THÀNH VIÊN NHÓM
+    // 6. KHỞI TẠO & QUẢN LÝ THÀNH VIÊN NHÓM THEO LỚP
     function initGroupMembers() {
       const container = document.getElementById('groupMembersContainer');
+      if (!container) return;
       container.innerHTML = '';
-      STUDENTS_LIST.forEach(hs => {
+      
+      const classStudents = STUDENTS_LIST.filter(hs => hs.lop === currentClass);
+      classStudents.forEach(hs => {
         const item = document.createElement('label');
         item.className = 'group-member-item flex items-center gap-2 p-2 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-purple-500/50 cursor-pointer transition text-xs select-none';
         item.dataset.name = hs.name.toLowerCase();
@@ -848,15 +914,20 @@
         `;
         container.appendChild(item);
       });
+
+      handleGroupMemberCheckedChange();
     }
 
     function handleGroupMemberCheckedChange() {
       const checkedBoxes = Array.from(document.querySelectorAll('.group-checkbox:checked'));
-      document.getElementById('selectedGroupCount').innerText = checkedBoxes.length;
+      const countEl = document.getElementById('selectedGroupCount');
+      if (countEl) countEl.innerText = checkedBoxes.length;
 
       const scoresBox = document.getElementById('groupMemberScoresBox');
       const scoresList = document.getElementById('groupMemberScoresList');
-      const commonScore = document.getElementById('nhomCommonScore').value || '9.0';
+      const commonScore = document.getElementById('nhomCommonScore')?.value || '9.0';
+
+      if (!scoresBox || !scoresList) return;
 
       if (checkedBoxes.length === 0) {
         scoresBox.classList.add('hidden');
@@ -874,7 +945,7 @@
       scoresList.innerHTML = '';
       checkedBoxes.forEach(cb => {
         const stt = cb.value;
-        const hs = STUDENTS_LIST.find(s => s.stt == stt);
+        const hs = STUDENTS_LIST.find(s => s.lop === currentClass && s.stt == stt);
         const name = hs ? hs.name : `Học sinh ${stt}`;
         const currentScoreVal = existingScores[stt] !== undefined ? existingScores[stt] : commonScore;
 
@@ -900,7 +971,6 @@
           </div>
         `;
         scoresList.appendChild(row);
-      });
     }
 
     function syncAllGroupScoresFromCommon() {
@@ -949,7 +1019,16 @@
 
       if (scoreType === 'Điểm cộng theo tuần') {
         category = document.getElementById('tuanSelect').value;
-        score = "+" + document.getElementById('tuanScore').value;
+        let rawScore = document.getElementById('tuanScore').value.trim();
+        
+        // Chuyển dấu phẩy thành dấu chấm để kiểm tra số
+        let numVal = parseFloat(rawScore.replace(',', '.'));
+        if (isNaN(numVal) || numVal < 0.25 || numVal > 100) {
+          showModal(false, "Điểm không hợp lệ", "Vui lòng nhập số hoặc số thập phân từ <strong>0,25</strong> đến <strong>100</strong> (Sử dụng dấu phẩy để nhập số thập phân, ví dụ: <code>0,25</code> hoặc <code>1,5</code> hoặc <code>10</code>).");
+          return;
+        }
+
+        score = "+" + rawScore;
         note = document.getElementById('tuanNote').value.trim();
       } else {
         category = "Kiểm tra";
