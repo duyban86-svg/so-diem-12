@@ -13,7 +13,7 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Google Identity Services (GIS) -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer onload="initGoogleAuthSDK()"></script>
   <!-- Danh sách học sinh chính thức 6 lớp: 10A01, 10A17, 10A18, 12A08, 12A13, 12A21 (287 học sinh) -->
   <script src="students.js"></script>
   <style>
@@ -90,12 +90,14 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <!-- Google Sign-In button render container -->
-          <div id="g_id_signin_wrapper"></div>
+          <!-- Google Sign-In button render container (Google Identity Services) -->
+          <div id="g_id_signin_wrapper" class="flex-shrink-0"></div>
           
+          <!-- Nút Fallback (chỉ hiển thị nếu trình duyệt chặn script Google) -->
           <button 
+            id="manualGoogleLoginBtn"
             onclick="triggerGoogleLogin()" 
-            class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-xl text-xs shadow-md transition cursor-pointer"
+            class="hidden flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-xl text-xs shadow-md transition cursor-pointer"
           >
             <svg class="w-4 h-4" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -858,7 +860,13 @@
     // =========================================================================
     function initGoogleAuthSDK() {
       const clientId = getGoogleClientId();
-      if (!window.google || !window.google.accounts || !clientId) return;
+      const manualBtn = document.getElementById('manualGoogleLoginBtn');
+      const btnWrapper = document.getElementById('g_id_signin_wrapper');
+
+      if (!window.google || !window.google.accounts || !clientId) {
+        if (manualBtn) manualBtn.classList.remove('hidden');
+        return;
+      }
 
       try {
         google.accounts.id.initialize({
@@ -868,17 +876,20 @@
           cancel_on_tap_outside: true
         });
 
-        const btnWrapper = document.getElementById('g_id_signin_wrapper');
         if (btnWrapper) {
+          btnWrapper.innerHTML = '';
           google.accounts.id.renderButton(btnWrapper, {
-            theme: 'filled_black',
-            size: 'medium',
+            theme: 'filled_blue',
+            size: 'large',
             shape: 'pill',
-            text: 'signin_with'
+            text: 'signin_with',
+            logo_alignment: 'left'
           });
+          if (manualBtn) manualBtn.classList.add('hidden');
         }
       } catch (err) {
         console.warn("Lỗi khởi tạo Google GIS:", err);
+        if (manualBtn) manualBtn.classList.remove('hidden');
       }
     }
 
