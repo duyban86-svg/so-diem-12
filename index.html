@@ -12,6 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Identity Services (GIS) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <!-- Danh sách học sinh chính thức 6 lớp: 10A01, 10A17, 10A18, 12A08, 12A13, 12A21 (287 học sinh) -->
   <script src="students.js"></script>
   <style>
@@ -43,7 +45,7 @@
     <div class="absolute -bottom-32 -right-32 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
     <!-- Header Tiêu đề & Nút Quản lý Giáo Viên -->
-    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pb-6 border-b border-slate-800/80 relative z-20">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pb-5 border-b border-slate-800/80 relative z-20">
       <div class="flex items-center gap-4 text-center sm:text-left">
         <div class="p-3.5 bg-indigo-500/20 border border-indigo-500/30 rounded-2xl shadow-inner text-indigo-400">
           <i data-lucide="book-marked" class="w-8 h-8"></i>
@@ -55,7 +57,7 @@
             </span>
           </div>
           <h1 class="text-xl sm:text-2xl font-extrabold text-white mt-1">HỆ THỐNG NHẬP ĐIỂM & ĐÁNH GIÁ</h1>
-          <p class="text-xs sm:text-sm text-slate-400">Gõ số thứ tự hoặc tên học sinh để tìm nhanh</p>
+          <p class="text-xs sm:text-sm text-slate-400">Xác thực tài khoản Google • Chống nhập hộ • Tự động ghi nhận</p>
         </div>
       </div>
       
@@ -65,12 +67,87 @@
         class="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 bg-indigo-950/80 hover:bg-indigo-900/80 border border-indigo-500/40 rounded-xl text-xs font-bold text-indigo-300 hover:text-white transition cursor-pointer shadow-lg shadow-indigo-950/50"
       >
         <i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i>
-        <span>Khóa / Mở Mục (Giáo Viên)</span>
+        <span>Bảng Điều Khiển Giáo Viên</span>
       </button>
     </div>
 
+    <!-- THANH XÁC THỰC TÀI KHOẢN GOOGLE (USER AUTH BAR) -->
+    <div id="authContainer" class="mt-4 p-3.5 bg-slate-950/90 border border-slate-800 rounded-2xl relative z-20 transition-all">
+      
+      <!-- Trạng thái 1: Chưa đăng nhập Google -->
+      <div id="authUnloggedState" class="flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-3 text-center sm:text-left">
+          <div class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-slate-400 flex-shrink-0">
+            <i data-lucide="user-x" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-white flex items-center gap-1.5 justify-center sm:justify-start">
+              <span>Chưa đăng nhập Google</span>
+              <span class="text-[10px] bg-amber-950 text-amber-300 px-2 py-0.5 rounded-full border border-amber-800/60 font-semibold">Khuyến nghị</span>
+            </div>
+            <p class="text-[11px] text-slate-400">Đăng nhập để khóa danh tính học sinh và bảo vệ kết quả điểm của bạn</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Google Sign-In button render container -->
+          <div id="g_id_signin_wrapper"></div>
+          
+          <button 
+            onclick="triggerGoogleLogin()" 
+            class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-xl text-xs shadow-md transition cursor-pointer"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span>Đăng nhập Google</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Trạng thái 2: Đã đăng nhập Google -->
+      <div id="authLoggedInState" class="hidden flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <img id="authUserAvatar" src="" alt="Avatar" class="w-10 h-10 rounded-full border border-indigo-500/50 shadow-inner flex-shrink-0" />
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span id="authUserName" class="text-xs font-bold text-white"></span>
+              <span id="authUserEmail" class="text-[11px] text-slate-400 font-mono"></span>
+            </div>
+            <!-- Huy hiệu trạng thái liên kết danh tính -->
+            <div id="authBindingStatus" class="mt-0.5 flex items-center gap-1.5 text-xs">
+              <!-- Sẽ render động: Đã liên kết hoặc Chưa liên kết -->
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button 
+            id="btnManualBind"
+            onclick="openBindingModal()" 
+            class="hidden px-3 py-1.5 bg-amber-600/90 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-amber-950/50 cursor-pointer"
+          >
+            <i data-lucide="link" class="w-3.5 h-3.5"></i>
+            <span>Liên kết danh tính</span>
+          </button>
+
+          <button 
+            onclick="handleSignOut()" 
+            class="px-3 py-1.5 bg-slate-800 hover:bg-rose-950/80 hover:text-rose-300 text-slate-300 rounded-xl text-xs font-semibold border border-slate-700 transition flex items-center gap-1 cursor-pointer"
+          >
+            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+            <span>Đăng xuất</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
     <!-- Tabs chọn loại điểm -->
-    <div class="grid grid-cols-3 gap-2 p-1.5 bg-slate-950/80 rounded-2xl border border-slate-800 mt-6 relative z-10">
+    <div class="grid grid-cols-3 gap-2 p-1.5 bg-slate-950/80 rounded-2xl border border-slate-800 mt-5 relative z-10">
       <button 
         onclick="switchTab('tuan')" 
         id="tabBtn-tuan" 
@@ -133,11 +210,17 @@
               </select>
             </div>
 
-            <!-- Chọn Học Sinh -->
+            <!-- Chọn Học Sinh (Tự động khóa nếu đã xác thực tài khoản Google) -->
             <div class="relative">
-              <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
-                <i data-lucide="user" class="w-4 h-4 text-indigo-400"></i> Học Sinh (Gõ STT, Tên hoặc Lớp) *
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+                <span class="flex items-center gap-1.5">
+                  <i data-lucide="user" class="w-4 h-4 text-indigo-400"></i> Học Sinh *
+                </span>
+                <span id="tuanLockBadge" class="hidden text-[10px] bg-emerald-950 text-emerald-300 font-bold px-2 py-0.5 rounded border border-emerald-800 flex items-center gap-1">
+                  <i data-lucide="shield-check" class="w-3 h-3"></i> Đã xác thực danh tính
+                </span>
               </label>
+
               <input 
                 type="text" 
                 id="tuanStudentSearch" 
@@ -145,7 +228,7 @@
                 autocomplete="off"
                 oninput="filterStudentSearch('tuan')"
                 onfocus="showStudentDropdown('tuan')"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm font-medium"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm font-medium transition"
               />
               <input type="hidden" id="tuanStudentStt" />
               <input type="hidden" id="tuanStudentName" />
@@ -235,9 +318,15 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- Chọn Học Sinh -->
             <div class="relative">
-              <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
-                <i data-lucide="user" class="w-4 h-4 text-emerald-400"></i> Học Sinh (Gõ STT, Tên hoặc Lớp) *
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+                <span class="flex items-center gap-1.5">
+                  <i data-lucide="user" class="w-4 h-4 text-emerald-400"></i> Học Sinh *
+                </span>
+                <span id="ktLockBadge" class="hidden text-[10px] bg-emerald-950 text-emerald-300 font-bold px-2 py-0.5 rounded border border-emerald-800 flex items-center gap-1">
+                  <i data-lucide="shield-check" class="w-3 h-3"></i> Đã xác thực danh tính
+                </span>
               </label>
+              
               <input 
                 type="text" 
                 id="ktStudentSearch" 
@@ -245,7 +334,7 @@
                 autocomplete="off"
                 oninput="filterStudentSearch('kt')"
                 onfocus="showStudentDropdown('kt')"
-                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm font-medium"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm font-medium transition"
               />
               <input type="hidden" id="ktStudentStt" />
               <input type="hidden" id="ktStudentName" />
@@ -272,7 +361,7 @@
             </div>
           </div>
 
-          <!-- Ghi chú (Thay cho nhận xét) -->
+          <!-- Ghi chú -->
           <div>
             <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
               <i data-lucide="file-text" class="w-4 h-4 text-emerald-400"></i> Ghi Chú (Tên bài kiểm tra / Nội dung lưu ý)
@@ -458,6 +547,81 @@
       </div>
     </div>
 
+    <!-- MODAL LIÊN KẾT DANH TÍNH HỌC SINH LẦN ĐẦU (SELF-BINDING DIALOG) -->
+    <div id="bindingModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+      <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative">
+        <div class="w-14 h-14 mx-auto mb-3 rounded-2xl flex items-center justify-center bg-amber-500/20 text-amber-400 border border-amber-500/30">
+          <i data-lucide="user-check" class="w-7 h-7"></i>
+        </div>
+        
+        <h3 class="text-lg font-bold text-white text-center mb-1">XÁC THỰC DANH TÍNH HỌC SINH</h3>
+        <p class="text-xs text-slate-400 text-center mb-4 leading-relaxed">
+          Tài khoản Google <strong id="bindingUserEmailDisplay" class="text-amber-300 font-mono"></strong> chưa được liên kết. Vui lòng chọn đúng thông tin của bạn (Chỉ thực hiện 1 lần duy nhất).
+        </p>
+
+        <form id="formBinding" onsubmit="handleConfirmBinding(event)" class="space-y-4">
+          <!-- Chọn Lớp -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
+              <i data-lucide="school" class="w-4 h-4 text-amber-400"></i> Lớp Học Của Bạn *
+            </label>
+            <select 
+              id="bindingClassSelect" 
+              onchange="handleBindingClassChange(this.value)"
+              required 
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-bold focus:ring-2 focus:ring-amber-500 focus:outline-none text-sm"
+            >
+              <option value="">-- Chọn lớp học --</option>
+              <option value="10A01">Lớp 10A01</option>
+              <option value="10A17">Lớp 10A17</option>
+              <option value="10A18">Lớp 10A18</option>
+              <option value="12A08">Lớp 12A08</option>
+              <option value="12A13">Lớp 12A13</option>
+              <option value="12A21">Lớp 12A21</option>
+            </select>
+          </div>
+
+          <!-- Chọn Học Sinh -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
+              <i data-lucide="user" class="w-4 h-4 text-amber-400"></i> Chọn Tên & Số Thứ Tự Của Bạn *
+            </label>
+            <select 
+              id="bindingStudentSelect" 
+              required 
+              disabled
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white font-medium focus:ring-2 focus:ring-amber-500 focus:outline-none text-sm disabled:opacity-50"
+            >
+              <option value="">-- Vui lòng chọn lớp trước --</option>
+            </select>
+          </div>
+
+          <div class="p-3 bg-amber-950/50 border border-amber-500/30 rounded-xl text-xs text-amber-200/90 leading-relaxed flex items-start gap-2">
+            <i data-lucide="shield-alert" class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5"></i>
+            <span>Lưu ý: Sau khi liên kết, tài khoản Google của bạn sẽ được gắn cố định với học sinh này. Bạn không thể mạo danh hoặc nhập điểm cho học sinh khác.</span>
+          </div>
+
+          <div class="flex items-center gap-3 pt-2">
+            <button 
+              type="button" 
+              onclick="closeBindingModal()" 
+              class="w-1/3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs transition cursor-pointer"
+            >
+              Bỏ qua
+            </button>
+            <button 
+              type="submit" 
+              id="btnSubmitBinding" 
+              class="w-2/3 py-2.5 bg-gradient-to-r from-amber-500 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white font-bold rounded-xl text-xs shadow-lg shadow-amber-950/50 transition cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <i data-lucide="check" class="w-4 h-4"></i>
+              <span>Xác Nhận Liên Kết</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- MODAL ĐIỀU KHIỂN KHÓA & ĐỔI MÃ PIN GIÁO VIÊN -->
     <div id="teacherModal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
       <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative max-h-[90vh] overflow-y-auto custom-scrollbar">
@@ -466,7 +630,7 @@
           <i data-lucide="shield-check" class="w-7 h-7"></i>
         </div>
         <h3 class="text-lg font-bold text-white text-center mb-1">BẢNG ĐIỀU KHIỂN GIÁO VIÊN</h3>
-        <p class="text-xs text-slate-400 text-center mb-4">Quản lý quyền nhập điểm & Cài đặt mã PIN</p>
+        <p class="text-xs text-slate-400 text-center mb-4">Quản lý quyền nhập điểm & Cài đặt hệ thống</p>
 
         <div class="space-y-4">
           <!-- Nhập mã PIN hiện tại -->
@@ -523,6 +687,33 @@
             <button type="button" onclick="setAllLocks(true)" class="py-2 px-3 bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800/80 rounded-xl text-xs font-bold transition cursor-pointer">
               🔒 Khóa Tất Cả
             </button>
+          </div>
+
+          <!-- CẤU HÌNH GOOGLE CLIENT ID -->
+          <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-2xl">
+            <div class="flex items-center justify-between cursor-pointer" onclick="toggleGoogleConfigSection()">
+              <span class="text-xs font-bold text-sky-300 flex items-center gap-1.5">
+                <i data-lucide="key" class="w-3.5 h-3.5"></i> Cấu Hình Google Client ID (GIS)
+              </span>
+              <i id="googleConfigChevron" data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform"></i>
+            </div>
+            
+            <div id="googleConfigBody" class="hidden mt-3 pt-3 border-t border-slate-800 space-y-2">
+              <label class="text-[11px] text-slate-400 block">Google OAuth Client ID:</label>
+              <input 
+                type="text" 
+                id="googleClientIdInput" 
+                placeholder="xxxx.apps.googleusercontent.com" 
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500 font-mono"
+              />
+              <button 
+                type="button" 
+                onclick="handleSaveGoogleClientId()" 
+                class="w-full py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Lưu Google Client ID
+              </button>
+            </div>
           </div>
 
           <!-- KHU VỰC ĐỔI MÃ PIN GIÁO VIÊN -->
@@ -609,11 +800,17 @@
   </div>
 
   <script>
-    // URL Google Apps Script mặc định của bạn
+    // URL Google Apps Script mặc định
     const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwAjPSnGDJt6_SAoiolcDkd0BJv8IMY5ovTK9D2MvzIqJj85oq1y5z8pM7Wmf5oHqZ2/exec";
+    // Google Client ID (Có thể cấu hình qua Bảng Giáo Viên)
+    const DEFAULT_GOOGLE_CLIENT_ID = "638361763756-sampleclientid.apps.googleusercontent.com";
 
     function getScriptUrl() {
       return localStorage.getItem('app_script_url') || DEFAULT_SCRIPT_URL;
+    }
+
+    function getGoogleClientId() {
+      return localStorage.getItem('app_google_client_id') || DEFAULT_GOOGLE_CLIENT_ID;
     }
 
     // Mã PIN Giáo Viên (Mặc định: 123456)
@@ -628,6 +825,10 @@
     let activeTab = 'tuan';
     let currentNhomClass = '12A08';
 
+    // Trạng thái tài khoản người dùng
+    let currentUser = null; // { email, name, picture, sub }
+    let boundStudent = null; // { lop, stt, name, email }
+
     document.addEventListener('DOMContentLoaded', () => {
       // Đảm bảo dữ liệu học sinh đã tải
       if (typeof STUDENTS_LIST === 'undefined' || !Array.isArray(STUDENTS_LIST)) {
@@ -638,10 +839,344 @@
       initWeeks();
       initGroupMembers(currentNhomClass);
       updateAllLockUI();
+      restoreSavedUserSession();
+      initGoogleAuthSDK();
       lucide.createIcons();
     });
 
+    // =========================================================================
+    // XÁC THỰC GOOGLE IDENTITY SERVICES (GIS) & LIÊN KẾT HỌC SINH
+    // =========================================================================
+    function initGoogleAuthSDK() {
+      const clientId = getGoogleClientId();
+      if (!window.google || !window.google.accounts || !clientId) return;
+
+      try {
+        google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleCredentialResponse,
+          auto_select: false,
+          cancel_on_tap_outside: true
+        });
+
+        // Render nút Google mặc định nếu có container
+        const btnWrapper = document.getElementById('g_id_signin_wrapper');
+        if (btnWrapper) {
+          google.accounts.id.renderButton(btnWrapper, {
+            theme: 'filled_black',
+            size: 'medium',
+            shape: 'pill',
+            text: 'signin_with'
+          });
+        }
+      } catch (err) {
+        console.warn("Lỗi khởi tạo Google GIS:", err);
+      }
+    }
+
+    function triggerGoogleLogin() {
+      const clientId = getGoogleClientId();
+      if (window.google && window.google.accounts && clientId && !clientId.includes('sampleclientid')) {
+        try {
+          google.accounts.id.prompt();
+          return;
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+
+      // Hộp thoại nhập email nhanh (Fallback/Test mode khi chưa gắn Client ID chính thức)
+      const inputEmail = prompt("Nhập địa chỉ Email Google (Gmail) của bạn để đăng nhập và xác thực danh tính:", currentUser?.email || "");
+      if (inputEmail && inputEmail.trim()) {
+        const cleanEmail = inputEmail.trim().toLowerCase();
+        handleLoginWithEmail(cleanEmail, cleanEmail.split('@')[0]);
+      }
+    }
+
+    // Giải mã JWT Token từ Google GIS
+    function decodeJwtResponse(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function handleGoogleCredentialResponse(response) {
+      if (!response || !response.credential) return;
+      const payload = decodeJwtResponse(response.credential);
+      if (payload) {
+        handleLoginWithEmail(payload.email.toLowerCase(), payload.name, payload.picture, payload.sub);
+      }
+    }
+
+    async function handleLoginWithEmail(email, name, picture, sub) {
+      currentUser = {
+        email: email,
+        name: name || email.split('@')[0],
+        picture: picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(name || email)}&background=6366f1&color=fff&bold=true`,
+        sub: sub || email
+      };
+
+      localStorage.setItem('app_logged_user', JSON.stringify(currentUser));
+      updateAuthUI();
+
+      // Kiểm tra xem email này đã liên kết với học sinh nào chưa
+      await checkAccountBinding(email);
+    }
+
+    function restoreSavedUserSession() {
+      const savedUserStr = localStorage.getItem('app_logged_user');
+      const savedBoundStr = localStorage.getItem('app_bound_student');
+
+      if (savedUserStr) {
+        try {
+          currentUser = JSON.parse(savedUserStr);
+        } catch (e) { currentUser = null; }
+      }
+
+      if (savedBoundStr) {
+        try {
+          boundStudent = JSON.parse(savedBoundStr);
+        } catch (e) { boundStudent = null; }
+      }
+
+      updateAuthUI();
+      if (boundStudent) {
+        applyBoundStudentIdentity(boundStudent);
+      }
+    }
+
+    function handleSignOut() {
+      currentUser = null;
+      boundStudent = null;
+      localStorage.removeItem('app_logged_user');
+      localStorage.removeItem('app_bound_student');
+      
+      updateAuthUI();
+      unlockStudentInputs();
+      lucide.createIcons();
+    }
+
+    function updateAuthUI() {
+      const unloggedState = document.getElementById('authUnloggedState');
+      const loggedInState = document.getElementById('authLoggedInState');
+      const userAvatar = document.getElementById('authUserAvatar');
+      const userName = document.getElementById('authUserName');
+      const userEmail = document.getElementById('authUserEmail');
+      const bindingStatus = document.getElementById('authBindingStatus');
+      const btnManualBind = document.getElementById('btnManualBind');
+
+      if (!currentUser) {
+        unloggedState.classList.remove('hidden');
+        loggedInState.classList.add('hidden');
+        unlockStudentInputs();
+        return;
+      }
+
+      unloggedState.classList.add('hidden');
+      loggedInState.classList.remove('hidden');
+      loggedInState.classList.add('flex');
+
+      userAvatar.src = currentUser.picture;
+      userName.innerText = currentUser.name;
+      userEmail.innerText = `(${currentUser.email})`;
+
+      if (boundStudent) {
+        bindingStatus.innerHTML = `
+          <span class="text-emerald-400 font-bold flex items-center gap-1">
+            <i data-lucide="badge-check" class="w-4 h-4 text-emerald-400"></i>
+            <span>Đã xác thực: <strong class="text-white">${boundStudent.name}</strong> • Lớp <strong class="text-amber-300 font-black">${boundStudent.lop}</strong> (STT: #${boundStudent.stt})</span>
+          </span>
+        `;
+        btnManualBind.classList.add('hidden');
+      } else {
+        bindingStatus.innerHTML = `
+          <span class="text-amber-400 font-medium flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Chưa liên kết danh tính học sinh</span>
+          </span>
+        `;
+        btnManualBind.classList.remove('hidden');
+      }
+
+      lucide.createIcons();
+    }
+
+    async function checkAccountBinding(email) {
+      // 1. Kiểm tra cache local trước
+      if (boundStudent && boundStudent.email === email) {
+        applyBoundStudentIdentity(boundStudent);
+        return;
+      }
+
+      // 2. Tra cứu danh sách liên kết từ Google Apps Script
+      try {
+        const res = await fetch(`${getScriptUrl()}?action=check_email&email=${encodeURIComponent(email)}`);
+        const data = await res.json();
+
+        if (data.status === 'success' && data.bound && data.student) {
+          boundStudent = data.student;
+          localStorage.setItem('app_bound_student', JSON.stringify(boundStudent));
+          updateAuthUI();
+          applyBoundStudentIdentity(boundStudent);
+        } else {
+          // Chưa liên kết -> Mở Popup yêu cầu liên kết lần đầu
+          boundStudent = null;
+          updateAuthUI();
+          openBindingModal();
+        }
+      } catch (err) {
+        console.warn("Không thể kiểm tra liên kết trực tuyến, sử dụng offline/local:", err);
+        if (!boundStudent) {
+          openBindingModal();
+        }
+      }
+    }
+
+    function applyBoundStudentIdentity(student) {
+      if (!student) return;
+
+      ['tuan', 'kt'].forEach(prefix => {
+        const searchInput = document.getElementById(`${prefix}StudentSearch`);
+        const sttInput = document.getElementById(`${prefix}StudentStt`);
+        const nameInput = document.getElementById(`${prefix}StudentName`);
+        const lopInput = document.getElementById(`${prefix}StudentLop`);
+        const badge = document.getElementById(`${prefix}LockBadge`);
+
+        if (searchInput) {
+          searchInput.value = `${student.name} - Lớp ${student.lop} (STT: ${student.stt})`;
+          searchInput.readOnly = true;
+          searchInput.classList.add('bg-slate-900', 'border-emerald-500/50', 'text-emerald-200', 'cursor-not-allowed');
+          searchInput.classList.remove('bg-slate-950', 'border-slate-700');
+        }
+        if (sttInput) sttInput.value = student.stt;
+        if (nameInput) nameInput.value = student.name;
+        if (lopInput) lopInput.value = student.lop;
+        if (badge) badge.classList.remove('hidden');
+      });
+      lucide.createIcons();
+    }
+
+    function unlockStudentInputs() {
+      ['tuan', 'kt'].forEach(prefix => {
+        const searchInput = document.getElementById(`${prefix}StudentSearch`);
+        const badge = document.getElementById(`${prefix}LockBadge`);
+        if (searchInput) {
+          searchInput.readOnly = false;
+          searchInput.classList.remove('bg-slate-900', 'border-emerald-500/50', 'text-emerald-200', 'cursor-not-allowed');
+          searchInput.classList.add('bg-slate-950', 'border-slate-700');
+        }
+        if (badge) badge.classList.add('hidden');
+      });
+      lucide.createIcons();
+    }
+
+    // Modal Liên kết học sinh lần đầu
+    function openBindingModal() {
+      if (!currentUser) {
+        alert("Vui lòng đăng nhập Google trước!");
+        return;
+      }
+      document.getElementById('bindingUserEmailDisplay').innerText = currentUser.email;
+      document.getElementById('bindingClassSelect').value = '';
+      const studentSelect = document.getElementById('bindingStudentSelect');
+      studentSelect.innerHTML = `<option value="">-- Vui lòng chọn lớp trước --</option>`;
+      studentSelect.disabled = true;
+
+      document.getElementById('bindingModal').classList.remove('hidden');
+      document.getElementById('bindingModal').classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closeBindingModal() {
+      document.getElementById('bindingModal').classList.add('hidden');
+      document.getElementById('bindingModal').classList.remove('flex');
+    }
+
+    function handleBindingClassChange(selectedClass) {
+      const studentSelect = document.getElementById('bindingStudentSelect');
+      if (!selectedClass) {
+        studentSelect.innerHTML = `<option value="">-- Vui lòng chọn lớp trước --</option>`;
+        studentSelect.disabled = true;
+        return;
+      }
+
+      const classStudents = STUDENTS_LIST.filter(s => s.lop === selectedClass);
+      studentSelect.innerHTML = `<option value="">-- Chọn tên & STT của bạn --</option>`;
+      classStudents.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = JSON.stringify({ lop: s.lop, stt: s.stt, name: s.name });
+        opt.innerText = `STT #${s.stt}: ${s.name}`;
+        studentSelect.appendChild(opt);
+      });
+      studentSelect.disabled = false;
+    }
+
+    async function handleConfirmBinding(e) {
+      e.preventDefault();
+      if (!currentUser) return;
+
+      const studentDataStr = document.getElementById('bindingStudentSelect').value;
+      if (!studentDataStr) {
+        alert("Vui lòng chọn học sinh từ danh sách!");
+        return;
+      }
+
+      const studentObj = JSON.parse(studentDataStr);
+      const btn = document.getElementById('btnSubmitBinding');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span>Đang liên kết dữ liệu...</span>`;
+
+      const payload = {
+        action: "bind_account",
+        email: currentUser.email,
+        lop: studentObj.lop,
+        stt: studentObj.stt,
+        name: studentObj.name,
+        note: `Google User: ${currentUser.name}`
+      };
+
+      try {
+        await fetch(getScriptUrl(), {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        boundStudent = {
+          lop: studentObj.lop,
+          stt: studentObj.stt,
+          name: studentObj.name,
+          email: currentUser.email
+        };
+
+        localStorage.setItem('app_bound_student', JSON.stringify(boundStudent));
+        closeBindingModal();
+        updateAuthUI();
+        applyBoundStudentIdentity(boundStudent);
+
+        showModal(true, "Xác Thực Thành Công!", `Tài khoản <strong class="text-amber-300 font-mono">${currentUser.email}</strong> đã được liên kết chính thức với:<br><br>👉 <strong>${boundStudent.name}</strong><br>Lớp: <strong class="text-indigo-400">${boundStudent.lop}</strong> • Số thứ tự: <strong>#${boundStudent.stt}</strong><br><br>Hệ thống đã tự động khóa danh tính của bạn khi nhập điểm.`);
+
+      } catch (err) {
+        showModal(false, "Lỗi liên kết", "Không thể gửi dữ liệu liên kết lên Google Sheets. Vui lòng kiểm tra lại kết nối mạng.");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        lucide.createIcons();
+      }
+    }
+
+    // =========================================================================
     // 1. TẠO 35 TUẦN TỪ 07/09/2026
+    // =========================================================================
     function initWeeks() {
       const select = document.getElementById('tuanSelect');
       if (!select) return;
@@ -666,7 +1201,9 @@
       }
     }
 
-    // 2. QUẢN LÝ KHÓA & ĐỔI PIN & CÀI ĐẶT SCRIPT URL
+    // =========================================================================
+    // 2. QUẢN LÝ KHÓA & BẢNG ĐIỀU KHIỂN GIÁO VIÊN
+    // =========================================================================
     function updateAllLockUI() {
       ['tuan', 'kiemtra', 'nhom'].forEach(key => {
         const isLocked = lockStates[key];
@@ -790,10 +1327,35 @@
       alert("🎉 Đã lưu cấu hình Link Web App Google Apps Script thành công!");
     }
 
+    function toggleGoogleConfigSection() {
+      const body = document.getElementById('googleConfigBody');
+      const chevron = document.getElementById('googleConfigChevron');
+      body.classList.toggle('hidden');
+      chevron.classList.toggle('rotate-180');
+      document.getElementById('googleClientIdInput').value = getGoogleClientId();
+    }
+
+    function handleSaveGoogleClientId() {
+      if (!verifyTeacherPin()) return;
+
+      const clientId = document.getElementById('googleClientIdInput').value.trim();
+      if (!clientId) {
+        alert("Vui lòng nhập Google Client ID!");
+        return;
+      }
+
+      localStorage.setItem('app_google_client_id', clientId);
+      toggleGoogleConfigSection();
+      initGoogleAuthSDK();
+      alert("🎉 Đã lưu cấu hình Google Client ID thành công!");
+    }
+
     function openTeacherModal() {
       document.getElementById('teacherPinInput').value = '';
       const scriptInput = document.getElementById('scriptUrlInput');
       if (scriptInput) scriptInput.value = getScriptUrl();
+      const googleInput = document.getElementById('googleClientIdInput');
+      if (googleInput) googleInput.value = getGoogleClientId();
       updateAllLockUI();
       document.getElementById('teacherModal').classList.remove('hidden');
       document.getElementById('teacherModal').classList.add('flex');
@@ -805,7 +1367,9 @@
       document.getElementById('teacherModal').classList.remove('flex');
     }
 
+    // =========================================================================
     // 3. CHUYỂN TAB
+    // =========================================================================
     function switchTab(tabId) {
       activeTab = tabId;
       document.querySelectorAll('.tab-btn').forEach(b => {
@@ -826,13 +1390,17 @@
       lucide.createIcons();
     }
 
+    // =========================================================================
     // 4. TÌM KIẾM HỌC SINH (HIỂN THỊ TRỰC TIẾP TÊN + LỚP + SỐ THỨ TỰ)
+    // =========================================================================
     function showStudentDropdown(prefix) {
+      if (boundStudent) return; // Nếu đã xác thực Google thì không mở dropdown
       filterStudentSearch(prefix);
       document.getElementById(`${prefix}Dropdown`).classList.remove('hidden');
     }
 
     function filterStudentSearch(prefix) {
+      if (boundStudent) return;
       const q = document.getElementById(`${prefix}StudentSearch`).value.toLowerCase().trim();
       const dropdown = document.getElementById(`${prefix}Dropdown`);
       dropdown.innerHTML = '';
@@ -899,18 +1467,11 @@
       });
     });
 
-    function setBonusScore(prefix, val) {
-      document.getElementById(`${prefix}Score`).value = val;
-      if (prefix === 'tuan') {
-        validateTuanScoreRealtime(val);
-      }
-    }
-
     function setNoteQuick(prefix, text) {
       document.getElementById(`${prefix}Note`).value = text;
     }
 
-    // Kiểm tra định dạng điểm tuần theo thời gian thực (Cảnh báo khi sai định dạng hoặc dùng dấu chấm)
+    // Kiểm tra định dạng điểm tuần theo thời gian thực
     function validateTuanScoreRealtime(val) {
       const alertBox = document.getElementById('tuanScoreLiveAlert');
       const alertText = document.getElementById('tuanScoreLiveAlertText');
@@ -963,7 +1524,9 @@
       inputEl.classList.add('border-slate-700');
     }
 
+    // =========================================================================
     // 5. KHỞI TẠO & QUẢN LÝ THÀNH VIÊN NHÓM THEO LỚP ĐƯỢC CHỌN TRONG TAB 3
+    // =========================================================================
     function switchNhomClass(className) {
       currentNhomClass = className;
       const badge = document.getElementById('nhomClassBadge');
@@ -1072,7 +1635,9 @@
       });
     }
 
-    // 6. GỬI ĐIỂM ĐƠN LẺ
+    // =========================================================================
+    // 6. GỬI ĐIỂM ĐƠN LẺ (KÈM EMAIL XÁC THỰC)
+    // =========================================================================
     async function handleSingleSubmit(e, scoreType) {
       e.preventDefault();
 
@@ -1113,7 +1678,7 @@
       }
 
       if (!stt || !name || !lop) {
-        showModal(false, "Chưa chọn học sinh", `Vui lòng gõ và chọn một học sinh trong 6 lớp (10A01, 10A17, 10A18, 12A08, 12A13, 12A21).`);
+        showModal(false, "Chưa chọn học sinh", `Vui lòng gõ và chọn một học sinh trong 6 lớp (10A01, 10A17, 10A18, 12A08, 12A13, 12A21) hoặc đăng nhập Google.`);
         return;
       }
 
@@ -1125,20 +1690,20 @@
         category = document.getElementById('tuanSelect').value;
         let rawScore = document.getElementById('tuanScore').value.trim();
         
-        // 1. Kiểm tra nếu người dùng dùng dấu chấm (.) thay vì dấu phẩy (,)
+        // 1. Kiểm tra dấu chấm (.)
         if (rawScore.includes('.')) {
           const suggested = rawScore.replace(/\./g, ',');
           showModal(false, "Sai định dạng dấu thập phân", `Hệ thống yêu cầu <strong>dùng dấu phẩy (,)</strong> khi nhập số thập phân.<br><br>👉 Vui lòng đổi từ <code class="text-rose-400 font-bold bg-rose-950 px-2 py-0.5 rounded">${rawScore}</code> thành <code class="text-emerald-400 font-bold bg-emerald-950 px-2 py-0.5 rounded">${suggested}</code> rồi thử lại.`);
           return;
         }
 
-        // 2. Kiểm tra ký tự lạ (chỉ cho phép số và dấu phẩy)
+        // 2. Kiểm tra ký tự lạ
         if (!/^\d+(,\d+)?$/.test(rawScore)) {
-          showModal(false, "Sai định dạng số", `Điểm số <code class="text-rose-400 font-bold">${rawScore}</code> không đúng định dạng!<br><br>Vui lòng chỉ nhập <strong>số nguyên</strong> (VD: <code>1</code>, <code>2</code>, <code>10</code>) hoặc <strong>số thập phân dùng dấu phẩy</strong> (VD: <code>0,25</code>, <code>1,5</code>, <code>2,75</code>). Không nhập chữ cái hay ký tự lạ.`);
+          showModal(false, "Sai định dạng số", `Điểm số <code class="text-rose-400 font-bold">${rawScore}</code> không đúng định dạng!<br><br>Vui lòng chỉ nhập <strong>số nguyên</strong> hoặc <strong>số thập phân dùng dấu phẩy</strong> (VD: <code>0,25</code>, <code>1,5</code>). Không nhập chữ cái.`);
           return;
         }
 
-        // 3. Chuyển dấu phẩy thành dấu chấm để kiểm tra khoảng giá trị
+        // 3. Kiểm tra khoảng giá trị
         let numVal = parseFloat(rawScore.replace(',', '.'));
         if (isNaN(numVal) || numVal < 0.25 || numVal > 100) {
           showModal(false, "Điểm ngoài khoảng cho phép", `Điểm số phải từ <strong>0,25</strong> đến <strong>100</strong>. Giá trị bạn vừa nhập: <code class="text-rose-400 font-bold">${rawScore}</code>.`);
@@ -1153,6 +1718,8 @@
         note = document.getElementById('ktNote').value.trim();
       }
 
+      const submitterEmail = currentUser ? currentUser.email : "";
+
       const payload = {
         lop: lop,
         stt: stt,
@@ -1160,7 +1727,8 @@
         scoreType: scoreType,
         category: category,
         score: score,
-        note: note
+        note: note,
+        email: submitterEmail
       };
 
       const btn = document.getElementById(prefix === 'tuan' ? 'btnSubmitTuan' : 'btnSubmitKt');
@@ -1182,10 +1750,14 @@
 
         showModal(true, "Thành Công!", successMsg);
         
-        document.getElementById(`${prefix}StudentSearch`).value = "";
-        document.getElementById(`${prefix}StudentStt`).value = "";
-        document.getElementById(`${prefix}StudentName`).value = "";
-        document.getElementById(`${prefix}StudentLop`).value = "";
+        // Nếu không dùng tài khoản liên kết thì xóa ô tìm kiếm
+        if (!boundStudent) {
+          document.getElementById(`${prefix}StudentSearch`).value = "";
+          document.getElementById(`${prefix}StudentStt`).value = "";
+          document.getElementById(`${prefix}StudentName`).value = "";
+          document.getElementById(`${prefix}StudentLop`).value = "";
+        }
+
         if (prefix === 'kt') {
           document.getElementById('ktScore').value = "";
           document.getElementById('ktNote').value = "";
@@ -1202,7 +1774,9 @@
       }
     }
 
-    // 7. GỬI ĐIỂM NHÓM
+    // =========================================================================
+    // 7. GỬI ĐIỂM NHÓM (KÈM EMAIL XÁC THỰC)
+    // =========================================================================
     async function handleGroupSubmit(e) {
       e.preventDefault();
 
@@ -1232,12 +1806,15 @@
         };
       });
 
+      const submitterEmail = currentUser ? currentUser.email : "";
+
       const payload = {
         lop: nhomClass,
         scoreType: "Điểm nhóm",
         category: `${nhomName} - ${activity}`,
         score: commonScore,
         note: note,
+        email: submitterEmail,
         students: memberList
       };
 
@@ -1271,7 +1848,9 @@
       }
     }
 
-    // Lịch sử
+    // =========================================================================
+    // LỊCH SỬ & MODAL KẾT QUẢ
+    // =========================================================================
     function addHistoryItem(lop, name, stt, type, cat, score) {
       const list = document.getElementById('recentHistoryList');
       if (list.querySelector('.italic')) {
