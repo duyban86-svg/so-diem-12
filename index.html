@@ -840,6 +840,16 @@
     let currentUser = null; // { email, name, picture, sub }
     let boundStudent = null; // { lop, stt, name, email }
 
+    // Danh sách email Giáo viên (Có toàn quyền quản trị, không bị bắt liên kết học sinh)
+    const PRIMARY_TEACHER_EMAIL = "duyban86@gmail.com";
+
+    function isTeacherUser(email) {
+      if (!email) return false;
+      const clean = email.trim().toLowerCase();
+      const customTeacherEmails = (localStorage.getItem('app_teacher_emails') || '').toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
+      return clean === PRIMARY_TEACHER_EMAIL || customTeacherEmails.includes(clean);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       // Đảm bảo dữ liệu học sinh đã tải
       if (typeof STUDENTS_LIST === 'undefined' || !Array.isArray(STUDENTS_LIST)) {
@@ -1022,8 +1032,22 @@
       userName.innerText = currentUser.name;
       userEmail.innerText = `(${currentUser.email})`;
 
-      if (boundStudent) {
-        // Đã đăng nhập VÀ Đã liên kết danh tính -> ẨN BANNER KHÓA
+      const isTeacher = isTeacherUser(currentUser.email);
+
+      if (isTeacher) {
+        // TRƯỜNG HỢP 1: TÀI KHOẢN GIÁO VIÊN (DUYBAN86@GMAIL.COM)
+        reqBanner.classList.add('hidden');
+        bindingStatus.innerHTML = `
+          <span class="text-amber-300 font-bold flex items-center gap-1.5 bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-500/50 shadow-inner">
+            <i data-lucide="crown" class="w-4 h-4 text-amber-400"></i>
+            <span>TÀI KHOẢN GIÁO VIÊN (Toàn quyền nhập & quản lý mọi học sinh)</span>
+          </span>
+        `;
+        btnManualBind.classList.add('hidden');
+        enableTeacherStudentSearch();
+
+      } else if (boundStudent) {
+        // TRƯỜNG HỢP 2: HỌC SINH ĐÃ LIÊN KẾT DANH TÍNH
         reqBanner.classList.add('hidden');
         bindingStatus.innerHTML = `
           <span class="text-emerald-400 font-bold flex items-center gap-1">
@@ -1032,8 +1056,10 @@
           </span>
         `;
         btnManualBind.classList.add('hidden');
+        applyBoundStudentIdentity(boundStudent);
+
       } else {
-        // Đã đăng nhập nhưng CHƯA LIÊN KẾT DANH TÍNH -> HIỆN BANNER BẮT BUỘC LIÊN KẾT
+        // TRƯỜNG HỢP 3: HỌC SINH CHƯA LIÊN KẾT DANH TÍNH -> BẮT BUỘC LIÊN KẾT
         reqBanner.classList.remove('hidden');
         reqBannerTitle.innerText = "CHƯA LIÊN KẾT DANH TÍNH HỌC SINH";
         reqBannerDesc.innerText = "Hệ thống đang khóa! Bạn bắt buộc phải chọn đúng Lớp và Tên của mình để mở khóa nhập điểm.";
@@ -1053,7 +1079,33 @@
       lucide.createIcons();
     }
 
+    function enableTeacherStudentSearch() {
+      ['tuan', 'kt'].forEach(prefix => {
+        const searchInput = document.getElementById(`${prefix}StudentSearch`);
+        const badge = document.getElementById(`${prefix}LockBadge`);
+        if (searchInput) {
+          searchInput.readOnly = false;
+          searchInput.placeholder = 'Gõ STT, Tên hoặc Lớp học sinh...';
+          searchInput.classList.remove('bg-slate-900', 'border-emerald-500/50', 'text-emerald-200', 'cursor-not-allowed', 'text-slate-300');
+          searchInput.classList.add('bg-slate-950', 'border-slate-700', 'text-white');
+        }
+        if (badge) {
+          badge.classList.remove('hidden');
+          badge.className = "text-[10px] bg-amber-950 text-amber-300 font-bold px-2 py-0.5 rounded border border-amber-800 flex items-center gap-1";
+          badge.innerHTML = `<i data-lucide="crown" class="w-3 h-3 text-amber-400"></i> Giáo viên chọn học sinh`;
+        }
+      });
+      lucide.createIcons();
+    }
+
     async function checkAccountBinding(email) {
+      // 0. Nếu là Giáo Viên -> Không cần kiểm tra liên kết học sinh
+      if (isTeacherUser(email)) {
+        boundStudent = null;
+        updateAuthUI();
+        return;
+      }
+
       // 1. Kiểm tra cache local trước
       if (boundStudent && boundStudent.email === email) {
         applyBoundStudentIdentity(boundStudent);
@@ -1079,7 +1131,7 @@
         }
       } catch (err) {
         console.warn("Không thể kiểm tra liên kết trực tuyến, sử dụng offline/local:", err);
-        if (!boundStudent) {
+        if (!boundStudent && !isTeacherUser(email)) {
           openBindingModal();
         }
       }
@@ -1260,7 +1312,8 @@
     // 2. QUẢN LÝ KHÓA & BẢNG ĐIỀU KHIỂN GIÁO VIÊN
     // =========================================================================
     function updateAllLockUI() {
-      const isAuthBlocked = !currentUser || !boundStudent;
+      const isTeacher = currentUser && isTeacherUser(currentUser.email);
+      const isAuthBlocked = !isTeacher && (!currentUser || !boundStudent);
 
       ['tuan', 'kiemtra', 'nhom'].forEach(key => {
         const isLockedByTeacher = lockStates[key];
@@ -1459,6 +1512,85 @@
       lucide.createIcons();
     }
 
+    // =========================================================================
+    // 4. TÌM KIẾM HỌC SINH (HIỂN THỊ TRỰC TIẾP TÊN + LỚP + SỐ THỨ TỰ)
+    // =========================================================================
+    function showStudentDropdown(prefix) {
+      const isTeacher = currentUser && isTeacherUser(currentUser.email);
+      if (boundStudent && !isTeacher) return; // Học sinh đã xác thực thì không đổi
+      filterStudentSearch(prefix);
+      document.getElementById(`${prefix}Dropdown`).classList.remove('hidden');
+    }
+
+    function filterStudentSearch(prefix) {
+      const isTeacher = currentUser && isTeacherUser(currentUser.email);
+      if (boundStudent && !isTeacher) return;
+      const q = document.getElementById(`${prefix}StudentSearch`).value.toLowerCase().trim();
+      const dropdown = document.getElementById(`${prefix}Dropdown`);
+      dropdown.innerHTML = '';
+
+      const filtered = STUDENTS_LIST.filter(hs => {
+        if (!q) return true;
+        return hs.stt.toString() === q ||
+               hs.stt.toString().includes(q) || 
+               hs.name.toLowerCase().includes(q) || 
+               hs.lop.toLowerCase().includes(q) || 
+               (hs.maHS && hs.maHS.toLowerCase().includes(q)) ||
+               `${hs.name} ${hs.lop}`.toLowerCase().includes(q) ||
+               `${hs.lop} ${hs.stt}`.toLowerCase().includes(q);
+      });
+
+      if (filtered.length === 0) {
+        dropdown.innerHTML = `<div class="p-3 text-xs text-slate-500 text-center">Không tìm thấy học sinh phù hợp</div>`;
+      } else {
+        filtered.slice(0, 40).forEach(hs => {
+          const div = document.createElement('div');
+          div.className = 'flex items-center justify-between p-2.5 rounded-xl hover:bg-indigo-600/30 hover:border-indigo-500/40 border border-transparent cursor-pointer transition text-xs select-none';
+          
+          const isKhoi10 = hs.lop.startsWith('10');
+          const badgeClass = isKhoi10 
+            ? 'bg-amber-950/80 text-amber-300 border-amber-800/60' 
+            : 'bg-indigo-950/80 text-indigo-300 border-indigo-800/60';
+
+          div.innerHTML = `
+            <div class="flex items-center gap-2 truncate">
+              <span class="font-bold text-slate-100 truncate">${hs.name}</span>
+              <span class="text-[11px] font-black px-2 py-0.5 rounded-full border ${badgeClass}">
+                ${hs.lop}
+              </span>
+            </div>
+            <span class="text-slate-400 font-mono text-[11px] bg-slate-900 px-2 py-0.5 rounded border border-slate-800 flex-shrink-0">
+              STT: ${hs.stt}
+            </span>
+          `;
+          div.onmousedown = (e) => {
+            e.preventDefault();
+            selectStudent(prefix, hs.stt, hs.name, hs.lop);
+          };
+          dropdown.appendChild(div);
+        });
+      }
+      dropdown.classList.remove('hidden');
+    }
+
+    function selectStudent(prefix, stt, name, lop) {
+      document.getElementById(`${prefix}StudentSearch`).value = `${name} - Lớp ${lop} (STT: ${stt})`;
+      document.getElementById(`${prefix}StudentStt`).value = stt;
+      document.getElementById(`${prefix}StudentName`).value = name;
+      document.getElementById(`${prefix}StudentLop`).value = lop;
+      document.getElementById(`${prefix}Dropdown`).classList.add('hidden');
+    }
+
+    document.addEventListener('click', (e) => {
+      ['tuan', 'kt'].forEach(p => {
+        const input = document.getElementById(`${p}StudentSearch`);
+        const dropdown = document.getElementById(`${p}Dropdown`);
+        if (input && dropdown && !input.contains(e.target) && !dropdown.contains(e.target)) {
+          dropdown.classList.add('hidden');
+        }
+      });
+    });
+
     function setNoteQuick(prefix, text) {
       document.getElementById(`${prefix}Note`).value = text;
     }
@@ -1628,7 +1760,7 @@
     }
 
     // =========================================================================
-    // 6. GỬI ĐIỂM ĐƠN LẺ (BẮT BUỘC ĐÃ ĐĂNG NHẬP & LIÊN KẾT)
+    // 6. GỬI ĐIỂM ĐƠN LẺ (BẮT BUỘC ĐÃ ĐĂNG NHẬP & LIÊN KẾT HOẶC LÀ GIÁO VIÊN)
     // =========================================================================
     async function handleSingleSubmit(e, scoreType) {
       e.preventDefault();
@@ -1639,7 +1771,9 @@
         return;
       }
 
-      if (!boundStudent) {
+      const isTeacher = isTeacherUser(currentUser.email);
+
+      if (!boundStudent && !isTeacher) {
         showModal(false, "Chưa Liên Kết Danh Tính", "Bạn chưa liên kết danh tính học sinh. Bắt buộc phải chọn đúng Lớp và Tên của mình trước khi nộp điểm!");
         openBindingModal();
         return;
@@ -1652,9 +1786,38 @@
       }
 
       let prefix = scoreType === 'Điểm cộng theo tuần' ? 'tuan' : 'kt';
-      let stt = boundStudent.stt;
-      let name = boundStudent.name;
-      let lop = boundStudent.lop;
+      let stt = isTeacher ? document.getElementById(`${prefix}StudentStt`).value : boundStudent.stt;
+      let name = isTeacher ? document.getElementById(`${prefix}StudentName`).value : boundStudent.name;
+      let lop = isTeacher ? document.getElementById(`${prefix}StudentLop`).value : boundStudent.lop;
+
+      // Nếu giáo viên chưa chọn từ dropdown mà gõ tìm kiếm -> Tự động nhận diện học sinh
+      if (isTeacher && (!stt || !name || !lop)) {
+        const query = document.getElementById(`${prefix}StudentSearch`).value.trim();
+        if (query) {
+          const qLower = query.toLowerCase();
+          const match = STUDENTS_LIST.find(s => {
+            return s.stt.toString() === query || 
+                   s.name.toLowerCase() === qLower || 
+                   `${s.name} - Lớp ${s.lop}`.toLowerCase().includes(qLower) ||
+                   `${s.name} ${s.lop}`.toLowerCase().includes(qLower) ||
+                   s.name.toLowerCase().includes(qLower);
+          });
+          if (match) {
+            stt = match.stt;
+            name = match.name;
+            lop = match.lop;
+            document.getElementById(`${prefix}StudentStt`).value = stt;
+            document.getElementById(`${prefix}StudentName`).value = name;
+            document.getElementById(`${prefix}StudentLop`).value = lop;
+            document.getElementById(`${prefix}StudentSearch`).value = `${name} - Lớp ${lop} (STT: ${stt})`;
+          }
+        }
+      }
+
+      if (!stt || !name || !lop) {
+        showModal(false, "Chưa chọn học sinh", `Vui lòng gõ và chọn một học sinh trong danh sách 6 lớp.`);
+        return;
+      }
 
       let category = "";
       let score = "";
@@ -1722,6 +1885,14 @@
 
         showModal(true, "Thành Công!", successMsg);
 
+        // Nếu là giáo viên, xóa trường tìm kiếm sau khi gửi
+        if (isTeacher) {
+          document.getElementById(`${prefix}StudentSearch`).value = "";
+          document.getElementById(`${prefix}StudentStt`).value = "";
+          document.getElementById(`${prefix}StudentName`).value = "";
+          document.getElementById(`${prefix}StudentLop`).value = "";
+        }
+
         if (prefix === 'kt') {
           document.getElementById('ktScore').value = "";
           document.getElementById('ktNote').value = "";
@@ -1739,7 +1910,7 @@
     }
 
     // =========================================================================
-    // 7. GỬI ĐIỂM NHÓM (BẮT BUỘC ĐÃ ĐĂNG NHẬP & LIÊN KẾT)
+    // 7. GỬI ĐIỂM NHÓM (BẮT BUỘC ĐÃ ĐĂNG NHẬP & LIÊN KẾT HOẶC LÀ GIÁO VIÊN)
     // =========================================================================
     async function handleGroupSubmit(e) {
       e.preventDefault();
@@ -1750,7 +1921,9 @@
         return;
       }
 
-      if (!boundStudent) {
+      const isTeacher = isTeacherUser(currentUser.email);
+
+      if (!boundStudent && !isTeacher) {
         showModal(false, "Chưa Liên Kết Danh Tính", "Bạn chưa liên kết danh tính học sinh. Bắt buộc phải liên kết trước khi nộp điểm!");
         openBindingModal();
         return;
