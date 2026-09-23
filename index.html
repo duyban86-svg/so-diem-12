@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- Danh sách học sinh chính thức năm học 2026-2027 (59 lớp - 2.881 học sinh) -->
+  <!-- Danh sách học sinh chính thức 6 lớp: 10A01, 10A17, 10A18, 12A08, 12A13, 12A21 (287 học sinh) -->
   <script src="students.js"></script>
   <style>
     body {
@@ -42,70 +42,31 @@
     <div class="absolute -top-32 -left-32 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
     <div class="absolute -bottom-32 -right-32 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
-    <!-- Thanh Điều Khiển Của Giáo Viên (Khóa / Mở Khóa Từng Mục) & Chọn Lớp -->
-    <div class="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-slate-800 relative z-20">
-      
-      <!-- Chọn Lớp Học -->
-      <div class="flex flex-wrap items-center gap-2">
-        <label class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-          <i data-lucide="school" class="w-4 h-4 text-indigo-400"></i> CHỌN LỚP:
-        </label>
-        <div class="relative">
-          <select 
-            id="classSelect" 
-            onchange="selectClass(this.value)" 
-            class="bg-slate-950 text-indigo-300 font-bold border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer pr-8 appearance-none shadow"
-          >
-            <!-- Sẽ được tạo tự động từ CLASSES_LIST -->
-          </select>
-          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
-            <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
-          </div>
-        </div>
-      </div>
-
-      <!-- Nút Quản Lý Khóa Dành Cho Giáo Viên -->
-      <button 
-        onclick="openTeacherModal()" 
-        class="flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-950/80 hover:bg-indigo-900/80 border border-indigo-500/40 rounded-xl text-xs font-bold text-indigo-300 hover:text-white transition cursor-pointer shadow-lg shadow-indigo-950/50"
-      >
-        <i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i>
-        <span>Khóa / Mở Từng Mục (Giáo Viên)</span>
-      </button>
-
-    </div>
-
-    <!-- Header Tiêu đề -->
-    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 py-5 border-b border-slate-800/80 relative z-10">
+    <!-- Header Tiêu đề & Nút Quản lý Giáo Viên -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pb-6 border-b border-slate-800/80 relative z-20">
       <div class="flex items-center gap-4 text-center sm:text-left">
         <div class="p-3.5 bg-indigo-500/20 border border-indigo-500/30 rounded-2xl shadow-inner text-indigo-400">
           <i data-lucide="book-marked" class="w-8 h-8"></i>
         </div>
         <div>
-          <div class="flex items-center gap-2 justify-center sm:justify-start">
+          <div class="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
             <span class="text-xs font-bold uppercase tracking-wider text-indigo-400 bg-indigo-950/80 px-2.5 py-0.5 rounded-full border border-indigo-800/60">
               NĂM HỌC 2026 - 2027
             </span>
-            <span id="currentClassTag" class="text-xs font-black uppercase text-amber-300 bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-800/60">
-              LỚP 12A08
-            </span>
           </div>
           <h1 class="text-xl sm:text-2xl font-extrabold text-white mt-1">HỆ THỐNG NHẬP ĐIỂM & ĐÁNH GIÁ</h1>
-          <p class="text-xs sm:text-sm text-slate-400">Năm học 2026 - 2027 • 59 Lớp • 2.881 Học sinh</p>
+          <p class="text-xs sm:text-sm text-slate-400">Gõ số thứ tự hoặc tên học sinh để tìm nhanh</p>
         </div>
       </div>
       
-      <!-- Sĩ số -->
-      <div class="flex flex-col sm:flex-row items-center gap-2 bg-slate-800/80 border border-slate-700/60 px-3.5 py-2 rounded-xl text-xs text-slate-300">
-        <div class="flex items-center gap-1.5">
-          <i data-lucide="users" class="w-4 h-4 text-indigo-400"></i>
-          <span>Sĩ số lớp: <strong class="text-amber-300 font-bold" id="currentClassCount">0</strong> HS</span>
-        </div>
-        <span class="hidden sm:inline text-slate-500">•</span>
-        <div class="text-[11px] text-slate-400">
-          Tổng: <strong class="text-white" id="totalStudentsCount">0</strong> HS
-        </div>
-      </div>
+      <!-- Nút Quản Lý Khóa Dành Cho Giáo Viên -->
+      <button 
+        onclick="openTeacherModal()" 
+        class="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 bg-indigo-950/80 hover:bg-indigo-900/80 border border-indigo-500/40 rounded-xl text-xs font-bold text-indigo-300 hover:text-white transition cursor-pointer shadow-lg shadow-indigo-950/50"
+      >
+        <i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i>
+        <span>Khóa / Mở Mục (Giáo Viên)</span>
+      </button>
     </div>
 
     <!-- Tabs chọn loại điểm -->
@@ -175,43 +136,63 @@
             <!-- Chọn Học Sinh -->
             <div class="relative">
               <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
-                <i data-lucide="user" class="w-4 h-4 text-indigo-400"></i> Học Sinh (Gõ tên / STT để tìm) *
+                <i data-lucide="user" class="w-4 h-4 text-indigo-400"></i> Học Sinh (Gõ STT, Tên hoặc Lớp) *
               </label>
               <input 
                 type="text" 
                 id="tuanStudentSearch" 
-                placeholder="Gõ STT hoặc tên học sinh..." 
+                placeholder="VD: 1, hoặc Lan, hoặc 12A08..." 
                 autocomplete="off"
                 oninput="filterStudentSearch('tuan')"
                 onfocus="showStudentDropdown('tuan')"
                 class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm font-medium"
               />
-              <input type="hidden" id="tuanStudentStt" required />
-              <input type="hidden" id="tuanStudentName" required />
+              <input type="hidden" id="tuanStudentStt" />
+              <input type="hidden" id="tuanStudentName" />
+              <input type="hidden" id="tuanStudentLop" />
               
               <div id="tuanDropdown" class="hidden absolute left-0 right-0 mt-1 max-h-56 overflow-y-auto custom-scrollbar bg-slate-950 border border-slate-700 rounded-xl shadow-2xl z-30 p-1.5 space-y-1"></div>
             </div>
           </div>
 
           <!-- Ô Nhập Điểm -->
-          <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-4">
-            <label class="block text-xs font-bold text-slate-200 mb-1.5 flex items-center gap-1.5">
+          <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 sm:p-5">
+            <label class="block text-xs font-bold text-slate-200 mb-2 flex items-center gap-1.5">
               <i data-lucide="edit-3" class="w-4 h-4 text-indigo-400"></i> NHẬP ĐIỂM VÀO ĐÂY *
             </label>
-            <p class="text-[11px] font-medium text-amber-300/90 mb-3 leading-relaxed">
-              NHẬP SỐ HOẶC SỐ THẬP PHÂN TỪ 0,25, SỬ DỤNG DẤU PHẨY ĐỂ NHẬP SỐ THẬP PHÂN.
-            </p>
-            <div class="flex items-center gap-3">
+            
+            <!-- Hướng dẫn và Làm nổi bật ghi chú -->
+            <div class="mb-3 p-3 rounded-2xl bg-gradient-to-r from-amber-950/60 via-slate-900 to-indigo-950/60 border border-amber-500/40 shadow-inner">
+              <div class="flex flex-wrap items-center gap-2 text-xs leading-relaxed">
+                <span class="font-bold text-amber-300 flex items-center gap-1">
+                  <i data-lucide="info" class="w-3.5 h-3.5 text-amber-400"></i>
+                  NHẬP SỐ NGUYÊN HOẶC SỐ THẬP PHÂN TỪ 0,25
+                </span>
+                <span class="font-black text-rose-300 bg-rose-950/90 px-2.5 py-1 rounded-lg border border-rose-500/80 shadow-md shadow-rose-950/50 uppercase tracking-wide inline-flex items-center gap-1 animate-pulse">
+                  <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-rose-400"></i>
+                  (DÙNG DẤU PHẨY KHI NHẬP SỐ THẬP PHÂN)
+                </span>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
               <input 
                 type="text" 
                 id="tuanScore" 
                 inputmode="decimal"
-                placeholder="VD: 0,25 hoặc 1,5 hoặc 10..." 
+                placeholder="VD: 1 hoặc 0,25 hoặc 1,5..." 
                 value="1,0" 
+                oninput="validateTuanScoreRealtime(this.value)"
                 required 
-                class="w-full sm:w-64 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                class="w-full sm:w-64 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
               />
-              <span class="text-xs text-slate-400 font-medium">Giá trị từ 0,25 đến 100</span>
+              <span class="text-xs text-slate-400 font-medium">Giá trị hợp lệ: 0,25 đến 100</span>
+            </div>
+
+            <!-- Cảnh báo lỗi trực tiếp dưới ô nhập điểm -->
+            <div id="tuanScoreLiveAlert" class="hidden mt-2.5 p-2.5 rounded-xl bg-rose-950/90 border border-rose-500/60 text-xs text-rose-200 font-medium flex items-center gap-2">
+              <i data-lucide="alert-circle" class="w-4 h-4 text-rose-400 flex-shrink-0"></i>
+              <span id="tuanScoreLiveAlertText"></span>
             </div>
           </div>
 
@@ -255,19 +236,20 @@
             <!-- Chọn Học Sinh -->
             <div class="relative">
               <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
-                <i data-lucide="user" class="w-4 h-4 text-emerald-400"></i> Tên Học Sinh (Gõ tên / STT để tìm) *
+                <i data-lucide="user" class="w-4 h-4 text-emerald-400"></i> Học Sinh (Gõ STT, Tên hoặc Lớp) *
               </label>
               <input 
                 type="text" 
                 id="ktStudentSearch" 
-                placeholder="Gõ STT hoặc tên học sinh..." 
+                placeholder="VD: 1, hoặc Lan, hoặc 12A08..." 
                 autocomplete="off"
                 oninput="filterStudentSearch('kt')"
                 onfocus="showStudentDropdown('kt')"
                 class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm font-medium"
               />
-              <input type="hidden" id="ktStudentStt" required />
-              <input type="hidden" id="ktStudentName" required />
+              <input type="hidden" id="ktStudentStt" />
+              <input type="hidden" id="ktStudentName" />
+              <input type="hidden" id="ktStudentLop" />
               
               <div id="ktDropdown" class="hidden absolute left-0 right-0 mt-1 max-h-56 overflow-y-auto custom-scrollbar bg-slate-950 border border-slate-700 rounded-xl shadow-2xl z-30 p-1.5 space-y-1"></div>
             </div>
@@ -317,7 +299,7 @@
       </div>
 
       <!-- ============================================== -->
-      <!-- TAB 3: ĐIỂM NHÓM (CÓ TÙY CHỌN ĐIỂM RIÊNG TỪNG THÀNH VIÊN) -->
+      <!-- TAB 3: ĐIỂM NHÓM (CHỌN LỚP & CHẤM ĐIỂM TỪNG THÀNH VIÊN) -->
       <!-- ============================================== -->
       <div id="wrapper-nhom" class="tab-wrapper hidden">
         <div id="lockBanner-nhom" class="hidden mb-4 p-4 rounded-2xl bg-rose-950/70 border border-rose-500/40 text-center animate-pulse">
@@ -328,13 +310,28 @@
         </div>
 
         <form id="formNhom" class="tab-content space-y-6" onsubmit="handleGroupSubmit(event)">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <!-- Chọn Lớp cho Nhóm -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
+                <i data-lucide="school" class="w-4 h-4 text-purple-400"></i> Lớp Của Nhóm *
+              </label>
+              <select id="nhomClassSelect" onchange="switchNhomClass(this.value)" required class="w-full bg-slate-950 border border-purple-500/40 rounded-xl px-3 py-2.5 text-amber-300 font-bold focus:ring-2 focus:ring-purple-500 focus:outline-none text-xs sm:text-sm">
+                <option value="10A01">Lớp 10A01</option>
+                <option value="10A17">Lớp 10A17</option>
+                <option value="10A18">Lớp 10A18</option>
+                <option value="12A08" selected>Lớp 12A08</option>
+                <option value="12A13">Lớp 12A13</option>
+                <option value="12A21">Lớp 12A21</option>
+              </select>
+            </div>
+
             <!-- Tên Nhóm -->
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
                 <i data-lucide="users" class="w-4 h-4 text-purple-400"></i> Nhóm / Đội *
               </label>
-              <select id="nhomSelect" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:ring-2 focus:ring-purple-500 focus:outline-none text-sm font-medium">
+              <select id="nhomSelect" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:ring-2 focus:ring-purple-500 focus:outline-none text-xs sm:text-sm font-medium">
                 <option value="Nhóm 1">Nhóm 1</option>
                 <option value="Nhóm 2">Nhóm 2</option>
                 <option value="Nhóm 3">Nhóm 3</option>
@@ -351,21 +348,21 @@
             <!-- Hoạt động nhóm -->
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
-                <i data-lucide="presentation" class="w-4 h-4 text-purple-400"></i> Hoạt Động Nhóm *
+                <i data-lucide="presentation" class="w-4 h-4 text-purple-400"></i> Hoạt Động *
               </label>
-              <select id="nhomActivity" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:ring-2 focus:ring-purple-500 focus:outline-none text-sm font-medium">
-                <option value="Thuyết trình chuyên đề">Thuyết trình chuyên đề</option>
-                <option value="Báo cáo dự án học tập">Báo cáo dự án học tập</option>
-                <option value="Thực hành thí nghiệm nhóm">Thực hành thí nghiệm nhóm</option>
-                <option value="Trò chơi / Hoạt động thi đua">Trò chơi / Hoạt động thi đua</option>
-                <option value="Thảo luận nhóm tại lớp">Thảo luận nhóm tại lớp</option>
+              <select id="nhomActivity" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:ring-2 focus:ring-purple-500 focus:outline-none text-xs sm:text-sm font-medium">
+                <option value="Thuyết trình chuyên đề">Thuyết trình</option>
+                <option value="Báo cáo dự án học tập">Báo cáo dự án</option>
+                <option value="Thực hành thí nghiệm nhóm">Thực hành thí nghiệm</option>
+                <option value="Trò chơi / Hoạt động thi đua">Thi đua / Trò chơi</option>
+                <option value="Thảo luận nhóm tại lớp">Thảo luận nhóm</option>
               </select>
             </div>
 
             <!-- Điểm Chung Của Nhóm -->
             <div>
               <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
-                <i data-lucide="star" class="w-4 h-4 text-amber-400"></i> Điểm Chung Cho Nhóm *
+                <i data-lucide="star" class="w-4 h-4 text-amber-400"></i> Điểm Chung *
               </label>
               <div class="flex items-center gap-1.5">
                 <input 
@@ -376,7 +373,7 @@
                   max="10" 
                   value="9.0"
                   required 
-                  placeholder="VD: 9.0" 
+                  placeholder="9.0" 
                   oninput="syncAllGroupScoresFromCommon()"
                   class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold text-center focus:ring-2 focus:ring-purple-500 focus:outline-none text-sm"
                 />
@@ -384,7 +381,7 @@
                   type="button" 
                   onclick="syncAllGroupScoresFromCommon()" 
                   title="Áp dụng điểm này cho tất cả thành viên"
-                  class="p-2 bg-purple-900/60 hover:bg-purple-800 text-purple-300 border border-purple-700/60 rounded-xl text-xs font-bold transition"
+                  class="p-2 bg-purple-900/60 hover:bg-purple-800 text-purple-300 border border-purple-700/60 rounded-xl text-xs font-bold transition flex-shrink-0"
                 >
                   <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                 </button>
@@ -397,7 +394,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
               <div>
                 <h4 class="text-xs font-bold text-slate-200 flex items-center gap-2">
-                  <i data-lucide="user-check" class="w-4 h-4 text-purple-400"></i> 1. Tích Chọn Các Thành Viên Trong Nhóm
+                  <i data-lucide="user-check" class="w-4 h-4 text-purple-400"></i> 1. Tích Chọn Thành Viên Nhóm (<span id="nhomClassBadge" class="text-amber-300 font-bold">12A08</span>)
                 </h4>
                 <span class="text-[11px] text-slate-400">Đã chọn: <strong id="selectedGroupCount" class="text-purple-400 font-bold">0</strong> học sinh</span>
               </div>
@@ -405,9 +402,9 @@
               <input 
                 type="text" 
                 id="groupMemberFilter" 
-                placeholder="Tìm nhanh học sinh..." 
+                placeholder="Tìm nhanh học sinh theo tên/STT..." 
                 oninput="filterGroupMemberList()"
-                class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-500 w-full sm:w-56"
+                class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-purple-500 w-full sm:w-60"
               />
             </div>
 
@@ -452,7 +449,7 @@
     <div class="mt-8 pt-6 border-t border-slate-800/80 relative z-10">
       <div class="flex items-center justify-between mb-3">
         <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-          <i data-lucide="history" class="w-4 h-4 text-indigo-400"></i> Lịch Sử Ghi Nhận Vừa Thực Hiện
+          <i data-lucide="history" class="w-4 h-4 text-indigo-400"></i> Lịch Sử Ghi Nhận Gần Đây
         </h4>
         <button onclick="clearHistory()" class="text-[11px] text-slate-500 hover:text-rose-400 transition cursor-pointer">Xóa lịch sử xem</button>
       </div>
@@ -560,6 +557,33 @@
             </div>
           </div>
 
+          <!-- KHU VỰC CÀI ĐẶT LINK GOOGLE APPS SCRIPT -->
+          <div class="p-3 bg-slate-950/80 border border-slate-800 rounded-2xl">
+            <div class="flex items-center justify-between cursor-pointer" onclick="toggleScriptUrlSection()">
+              <span class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                <i data-lucide="link-2" class="w-3.5 h-3.5"></i> Cài Đặt Link Google Apps Script
+              </span>
+              <i id="scriptUrlChevron" data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform"></i>
+            </div>
+            
+            <div id="scriptUrlBody" class="hidden mt-3 pt-3 border-t border-slate-800 space-y-2">
+              <label class="text-[11px] text-slate-400 block">Link Web App URL (doPost) kết nối Google Sheet:</label>
+              <input 
+                type="text" 
+                id="scriptUrlInput" 
+                placeholder="https://script.google.com/macros/s/.../exec" 
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono"
+              />
+              <button 
+                type="button" 
+                onclick="handleSaveScriptUrl()" 
+                class="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Lưu Link Web App
+              </button>
+            </div>
+          </div>
+
           <button 
             onclick="closeTeacherModal()" 
             class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs transition cursor-pointer"
@@ -585,11 +609,14 @@
   </div>
 
   <script>
-    // URL Google Apps Script của bạn
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwAjPSnGDJt6_SAoiolcDkd0BJv8IMY5ovTK9D2MvzIqJj85oq1y5z8pM7Wmf5oHqZ2/exec";
+    // URL Google Apps Script mặc định của bạn
+    const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwAjPSnGDJt6_SAoiolcDkd0BJv8IMY5ovTK9D2MvzIqJj85oq1y5z8pM7Wmf5oHqZ2/exec";
 
-    // Trạng thái lớp học & Mã PIN (Mặc định: 123456)
-    let currentClass = localStorage.getItem('app_selected_class') || '12A08';
+    function getScriptUrl() {
+      return localStorage.getItem('app_script_url') || DEFAULT_SCRIPT_URL;
+    }
+
+    // Mã PIN Giáo Viên (Mặc định: 123456)
     let teacherPin = localStorage.getItem('app_teacher_pin') || '123456';
 
     let lockStates = {
@@ -599,84 +626,25 @@
     };
 
     let activeTab = 'tuan';
+    let currentNhomClass = '12A08';
 
     document.addEventListener('DOMContentLoaded', () => {
-      initClassSelector();
-      selectClass(currentClass);
+      // Đảm bảo dữ liệu học sinh đã tải
+      if (typeof STUDENTS_LIST === 'undefined' || !Array.isArray(STUDENTS_LIST)) {
+        alert("⚠️ Cảnh báo: Không thể tải danh sách học sinh từ file students.js! Vui lòng kiểm tra lại vị trí file.");
+        return;
+      }
+
       initWeeks();
+      initGroupMembers(currentNhomClass);
       updateAllLockUI();
-      document.getElementById('totalStudentsCount').innerText = STUDENTS_LIST.length.toLocaleString('vi-VN');
       lucide.createIcons();
     });
 
-    // 1. KHỞI TẠO & CHỌN LỚP
-    function initClassSelector() {
-      const select = document.getElementById('classSelect');
-      select.innerHTML = '';
-
-      const groups = {
-        'Khối 10': CLASSES_LIST.filter(c => c.startsWith('10')),
-        'Khối 11': CLASSES_LIST.filter(c => c.startsWith('11')),
-        'Khối 12': CLASSES_LIST.filter(c => c.startsWith('12'))
-      };
-
-      Object.keys(groups).forEach(grpName => {
-        const list = groups[grpName];
-        if (list.length > 0) {
-          const optGroup = document.createElement('optgroup');
-          optGroup.label = `${grpName} (${list.length} Lớp)`;
-          list.forEach(cls => {
-            const opt = document.createElement('option');
-            opt.value = cls;
-            opt.innerText = `Lớp ${cls}`;
-            optGroup.appendChild(opt);
-          });
-          select.appendChild(optGroup);
-        }
-      });
-
-      if (!CLASSES_LIST.includes(currentClass)) {
-        currentClass = CLASSES_LIST[0] || '10A01';
-      }
-      select.value = currentClass;
-    }
-
-    function selectClass(className) {
-      if (!CLASSES_LIST.includes(className)) {
-        className = CLASSES_LIST[0] || '10A01';
-      }
-      currentClass = className;
-      localStorage.setItem('app_selected_class', className);
-
-      const select = document.getElementById('classSelect');
-      if (select && select.value !== className) {
-        select.value = className;
-      }
-
-      document.getElementById('currentClassTag').innerText = `LỚP ${className}`;
-
-      const classStudents = STUDENTS_LIST.filter(s => s.lop === className);
-      const countEl = document.getElementById('currentClassCount');
-      if (countEl) countEl.innerText = classStudents.length;
-
-      // Xóa thông tin học sinh cũ khi đổi lớp
-      ['tuan', 'kt'].forEach(p => {
-        const inputSearch = document.getElementById(`${p}StudentSearch`);
-        const inputStt = document.getElementById(`${p}StudentStt`);
-        const inputName = document.getElementById(`${p}StudentName`);
-        const dropdown = document.getElementById(`${p}Dropdown`);
-        if (inputSearch) inputSearch.value = '';
-        if (inputStt) inputStt.value = '';
-        if (inputName) inputName.value = '';
-        if (dropdown) dropdown.classList.add('hidden');
-      });
-
-      initGroupMembers();
-    }
-
-    // 2. TẠO 35 TUẦN TỪ 07/09/2026
+    // 1. TẠO 35 TUẦN TỪ 07/09/2026
     function initWeeks() {
       const select = document.getElementById('tuanSelect');
+      if (!select) return;
       select.innerHTML = '';
       
       const startDate = new Date(2026, 8, 7);
@@ -698,7 +666,7 @@
       }
     }
 
-    // 3. QUẢN LÝ KHÓA & ĐỔI PIN
+    // 2. QUẢN LÝ KHÓA & ĐỔI PIN & CÀI ĐẶT SCRIPT URL
     function updateAllLockUI() {
       ['tuan', 'kiemtra', 'nhom'].forEach(key => {
         const isLocked = lockStates[key];
@@ -800,8 +768,32 @@
       alert("🎉 Đã đổi mã PIN Giáo viên thành công!");
     }
 
+    function toggleScriptUrlSection() {
+      const body = document.getElementById('scriptUrlBody');
+      const chevron = document.getElementById('scriptUrlChevron');
+      body.classList.toggle('hidden');
+      chevron.classList.toggle('rotate-180');
+      document.getElementById('scriptUrlInput').value = getScriptUrl();
+    }
+
+    function handleSaveScriptUrl() {
+      if (!verifyTeacherPin()) return;
+
+      const url = document.getElementById('scriptUrlInput').value.trim();
+      if (!url.startsWith('https://script.google.com/')) {
+        alert("Link URL không hợp lệ! URL phải bắt đầu bằng https://script.google.com/...");
+        return;
+      }
+
+      localStorage.setItem('app_script_url', url);
+      toggleScriptUrlSection();
+      alert("🎉 Đã lưu cấu hình Link Web App Google Apps Script thành công!");
+    }
+
     function openTeacherModal() {
       document.getElementById('teacherPinInput').value = '';
+      const scriptInput = document.getElementById('scriptUrlInput');
+      if (scriptInput) scriptInput.value = getScriptUrl();
       updateAllLockUI();
       document.getElementById('teacherModal').classList.remove('hidden');
       document.getElementById('teacherModal').classList.add('flex');
@@ -813,7 +805,7 @@
       document.getElementById('teacherModal').classList.remove('flex');
     }
 
-    // 4. CHUYỂN TAB
+    // 3. CHUYỂN TAB
     function switchTab(tabId) {
       activeTab = tabId;
       document.querySelectorAll('.tab-btn').forEach(b => {
@@ -834,7 +826,7 @@
       lucide.createIcons();
     }
 
-    // 5. TÌM KIẾM HỌC SINH THEO LỚP
+    // 4. TÌM KIẾM HỌC SINH (HIỂN THỊ TRỰC TIẾP TÊN + LỚP + SỐ THỨ TỰ)
     function showStudentDropdown(prefix) {
       filterStudentSearch(prefix);
       document.getElementById(`${prefix}Dropdown`).classList.remove('hidden');
@@ -845,35 +837,55 @@
       const dropdown = document.getElementById(`${prefix}Dropdown`);
       dropdown.innerHTML = '';
 
-      const classStudents = STUDENTS_LIST.filter(hs => hs.lop === currentClass);
-      const filtered = classStudents.filter(hs => {
+      const filtered = STUDENTS_LIST.filter(hs => {
         if (!q) return true;
-        return hs.stt.toString().includes(q) || 
+        return hs.stt.toString() === q ||
+               hs.stt.toString().includes(q) || 
                hs.name.toLowerCase().includes(q) || 
-               (hs.maHS && hs.maHS.toLowerCase().includes(q));
+               hs.lop.toLowerCase().includes(q) || 
+               (hs.maHS && hs.maHS.toLowerCase().includes(q)) ||
+               `${hs.name} ${hs.lop}`.toLowerCase().includes(q) ||
+               `${hs.lop} ${hs.stt}`.toLowerCase().includes(q);
       });
 
       if (filtered.length === 0) {
-        dropdown.innerHTML = `<div class="p-2.5 text-xs text-slate-500 text-center">Không tìm thấy học sinh trong lớp ${currentClass}</div>`;
+        dropdown.innerHTML = `<div class="p-3 text-xs text-slate-500 text-center">Không tìm thấy học sinh phù hợp</div>`;
       } else {
-        filtered.slice(0, 50).forEach(hs => {
+        filtered.slice(0, 40).forEach(hs => {
           const div = document.createElement('div');
-          div.className = 'flex items-center justify-between p-2 rounded-lg hover:bg-indigo-600/30 hover:border-indigo-500/40 border border-transparent cursor-pointer transition text-xs';
+          div.className = 'flex items-center justify-between p-2.5 rounded-xl hover:bg-indigo-600/30 hover:border-indigo-500/40 border border-transparent cursor-pointer transition text-xs select-none';
+          
+          const isKhoi10 = hs.lop.startsWith('10');
+          const badgeClass = isKhoi10 
+            ? 'bg-amber-950/80 text-amber-300 border-amber-800/60' 
+            : 'bg-indigo-950/80 text-indigo-300 border-indigo-800/60';
+
           div.innerHTML = `
-            <span class="font-medium text-slate-200">${hs.name}</span>
-            <span class="text-indigo-400 font-mono text-[11px] bg-indigo-950/80 px-1.5 py-0.5 rounded border border-indigo-800/50">STT: ${hs.stt}</span>
+            <div class="flex items-center gap-2 truncate">
+              <span class="font-bold text-slate-100 truncate">${hs.name}</span>
+              <span class="text-[11px] font-black px-2 py-0.5 rounded-full border ${badgeClass}">
+                ${hs.lop}
+              </span>
+            </div>
+            <span class="text-slate-400 font-mono text-[11px] bg-slate-900 px-2 py-0.5 rounded border border-slate-800 flex-shrink-0">
+              STT: ${hs.stt}
+            </span>
           `;
-          div.onclick = () => selectStudent(prefix, hs.stt, hs.name);
+          div.onmousedown = (e) => {
+            e.preventDefault();
+            selectStudent(prefix, hs.stt, hs.name, hs.lop);
+          };
           dropdown.appendChild(div);
         });
       }
       dropdown.classList.remove('hidden');
     }
 
-    function selectStudent(prefix, stt, name) {
-      document.getElementById(`${prefix}StudentSearch`).value = `${name} (STT: ${stt})`;
+    function selectStudent(prefix, stt, name, lop) {
+      document.getElementById(`${prefix}StudentSearch`).value = `${name} - Lớp ${lop} (STT: ${stt})`;
       document.getElementById(`${prefix}StudentStt`).value = stt;
       document.getElementById(`${prefix}StudentName`).value = name;
+      document.getElementById(`${prefix}StudentLop`).value = lop;
       document.getElementById(`${prefix}Dropdown`).classList.add('hidden');
     }
 
@@ -889,19 +901,83 @@
 
     function setBonusScore(prefix, val) {
       document.getElementById(`${prefix}Score`).value = val;
+      if (prefix === 'tuan') {
+        validateTuanScoreRealtime(val);
+      }
     }
 
     function setNoteQuick(prefix, text) {
       document.getElementById(`${prefix}Note`).value = text;
     }
 
-    // 6. KHỞI TẠO & QUẢN LÝ THÀNH VIÊN NHÓM THEO LỚP
-    function initGroupMembers() {
+    // Kiểm tra định dạng điểm tuần theo thời gian thực (Cảnh báo khi sai định dạng hoặc dùng dấu chấm)
+    function validateTuanScoreRealtime(val) {
+      const alertBox = document.getElementById('tuanScoreLiveAlert');
+      const alertText = document.getElementById('tuanScoreLiveAlertText');
+      const inputEl = document.getElementById('tuanScore');
+      if (!alertBox || !alertText || !inputEl) return;
+
+      const trimmed = (val || '').trim();
+      if (!trimmed) {
+        alertBox.classList.add('hidden');
+        inputEl.classList.remove('border-rose-500', 'focus:ring-rose-500');
+        inputEl.classList.add('border-slate-700');
+        return;
+      }
+
+      // 1. Cảnh báo khi người dùng dùng dấu chấm (.) thay vì dấu phẩy (,)
+      if (trimmed.includes('.')) {
+        alertBox.classList.remove('hidden');
+        const suggested = trimmed.replace(/\./g, ',');
+        alertText.innerHTML = `<span>⚠️ <strong>Phát hiện dấu chấm (.)!</strong> Vui lòng dùng <strong>dấu phẩy (,)</strong> khi nhập số thập phân (Ví dụ đổi <code class="text-white font-bold bg-rose-900 px-1.5 py-0.5 rounded">${trimmed}</code> thành <code class="text-emerald-300 font-bold bg-emerald-950 px-1.5 py-0.5 rounded">${suggested}</code>).</span>`;
+        inputEl.classList.add('border-rose-500', 'focus:ring-rose-500');
+        inputEl.classList.remove('border-slate-700');
+        lucide.createIcons();
+        return;
+      }
+
+      // 2. Cảnh báo khi nhập chữ hoặc ký tự lạ
+      if (!/^\d+(,\d*)?$/.test(trimmed)) {
+        alertBox.classList.remove('hidden');
+        alertText.innerHTML = `<span>⚠️ <strong>Sai định dạng số!</strong> Chỉ nhập số nguyên (VD: <code>1</code>, <code>2</code>) hoặc số thập phân dùng dấu phẩy (VD: <code>0,25</code>, <code>1,5</code>). Không nhập chữ cái hay ký tự lạ.</span>`;
+        inputEl.classList.add('border-rose-500', 'focus:ring-rose-500');
+        inputEl.classList.remove('border-slate-700');
+        lucide.createIcons();
+        return;
+      }
+
+      // 3. Cảnh báo khi điểm ngoài khoảng 0,25 đến 100
+      const numVal = parseFloat(trimmed.replace(',', '.'));
+      if (isNaN(numVal) || numVal < 0.25 || numVal > 100) {
+        alertBox.classList.remove('hidden');
+        alertText.innerHTML = `<span>⚠️ <strong>Điểm ngoài khoảng cho phép!</strong> Giá trị điểm phải từ <strong>0,25</strong> đến <strong>100</strong>.</span>`;
+        inputEl.classList.add('border-rose-500', 'focus:ring-rose-500');
+        inputEl.classList.remove('border-slate-700');
+        lucide.createIcons();
+        return;
+      }
+
+      // Hợp lệ -> Ẩn cảnh báo
+      alertBox.classList.add('hidden');
+      inputEl.classList.remove('border-rose-500', 'focus:ring-rose-500');
+      inputEl.classList.add('border-slate-700');
+    }
+
+    // 5. KHỞI TẠO & QUẢN LÝ THÀNH VIÊN NHÓM THEO LỚP ĐƯỢC CHỌN TRONG TAB 3
+    function switchNhomClass(className) {
+      currentNhomClass = className;
+      const badge = document.getElementById('nhomClassBadge');
+      if (badge) badge.innerText = className;
+      initGroupMembers(className);
+    }
+
+    function initGroupMembers(className) {
+      const targetClass = className || currentNhomClass;
       const container = document.getElementById('groupMembersContainer');
       if (!container) return;
       container.innerHTML = '';
       
-      const classStudents = STUDENTS_LIST.filter(hs => hs.lop === currentClass);
+      const classStudents = STUDENTS_LIST.filter(hs => hs.lop === targetClass);
       classStudents.forEach(hs => {
         const item = document.createElement('label');
         item.className = 'group-member-item flex items-center gap-2 p-2 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-purple-500/50 cursor-pointer transition text-xs select-none';
@@ -945,7 +1021,7 @@
       scoresList.innerHTML = '';
       checkedBoxes.forEach(cb => {
         const stt = cb.value;
-        const hs = STUDENTS_LIST.find(s => s.lop === currentClass && s.stt == stt);
+        const hs = STUDENTS_LIST.find(s => s.lop === currentNhomClass && s.stt == stt);
         const name = hs ? hs.name : `Học sinh ${stt}`;
         const currentScoreVal = existingScores[stt] !== undefined ? existingScores[stt] : commonScore;
 
@@ -955,6 +1031,7 @@
           <div class="flex items-center gap-2 truncate">
             <span class="font-mono text-purple-400 font-bold">#${stt}</span>
             <span class="text-slate-200 font-medium truncate">${name}</span>
+            <span class="text-[10px] text-amber-400 bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-800/40">${currentNhomClass}</span>
           </div>
           <div class="flex items-center gap-2 flex-shrink-0">
             <label class="text-[11px] text-slate-400">Điểm:</label>
@@ -971,6 +1048,7 @@
           </div>
         `;
         scoresList.appendChild(row);
+      });
     }
 
     function syncAllGroupScoresFromCommon() {
@@ -994,7 +1072,7 @@
       });
     }
 
-    // 7. GỬI ĐIỂM ĐƠN LẺ
+    // 6. GỬI ĐIỂM ĐƠN LẺ
     async function handleSingleSubmit(e, scoreType) {
       e.preventDefault();
 
@@ -1005,11 +1083,37 @@
       }
 
       let prefix = scoreType === 'Điểm cộng theo tuần' ? 'tuan' : 'kt';
-      const stt = document.getElementById(`${prefix}StudentStt`).value;
-      const name = document.getElementById(`${prefix}StudentName`).value;
+      let stt = document.getElementById(`${prefix}StudentStt`).value;
+      let name = document.getElementById(`${prefix}StudentName`).value;
+      let lop = document.getElementById(`${prefix}StudentLop`).value;
 
-      if (!stt || !name) {
-        showModal(false, "Chưa chọn học sinh", "Vui lòng bấm chọn một học sinh trong danh sách gợi ý.");
+      // Nếu chưa chọn từ danh sách nhưng đã gõ trong ô tìm kiếm -> Tự động tìm kiếm học sinh phù hợp
+      if (!stt || !name || !lop) {
+        const query = document.getElementById(`${prefix}StudentSearch`).value.trim();
+        if (query) {
+          const qLower = query.toLowerCase();
+          const match = STUDENTS_LIST.find(s => {
+            return s.stt.toString() === query || 
+                   s.name.toLowerCase() === qLower || 
+                   `${s.name} - Lớp ${s.lop}`.toLowerCase().includes(qLower) ||
+                   `${s.name} ${s.lop}`.toLowerCase().includes(qLower) ||
+                   s.name.toLowerCase().includes(qLower);
+          });
+
+          if (match) {
+            stt = match.stt;
+            name = match.name;
+            lop = match.lop;
+            document.getElementById(`${prefix}StudentStt`).value = stt;
+            document.getElementById(`${prefix}StudentName`).value = name;
+            document.getElementById(`${prefix}StudentLop`).value = lop;
+            document.getElementById(`${prefix}StudentSearch`).value = `${name} - Lớp ${lop} (STT: ${stt})`;
+          }
+        }
+      }
+
+      if (!stt || !name || !lop) {
+        showModal(false, "Chưa chọn học sinh", `Vui lòng gõ và chọn một học sinh trong 6 lớp (10A01, 10A17, 10A18, 12A08, 12A13, 12A21).`);
         return;
       }
 
@@ -1021,10 +1125,23 @@
         category = document.getElementById('tuanSelect').value;
         let rawScore = document.getElementById('tuanScore').value.trim();
         
-        // Chuyển dấu phẩy thành dấu chấm để kiểm tra số
+        // 1. Kiểm tra nếu người dùng dùng dấu chấm (.) thay vì dấu phẩy (,)
+        if (rawScore.includes('.')) {
+          const suggested = rawScore.replace(/\./g, ',');
+          showModal(false, "Sai định dạng dấu thập phân", `Hệ thống yêu cầu <strong>dùng dấu phẩy (,)</strong> khi nhập số thập phân.<br><br>👉 Vui lòng đổi từ <code class="text-rose-400 font-bold bg-rose-950 px-2 py-0.5 rounded">${rawScore}</code> thành <code class="text-emerald-400 font-bold bg-emerald-950 px-2 py-0.5 rounded">${suggested}</code> rồi thử lại.`);
+          return;
+        }
+
+        // 2. Kiểm tra ký tự lạ (chỉ cho phép số và dấu phẩy)
+        if (!/^\d+(,\d+)?$/.test(rawScore)) {
+          showModal(false, "Sai định dạng số", `Điểm số <code class="text-rose-400 font-bold">${rawScore}</code> không đúng định dạng!<br><br>Vui lòng chỉ nhập <strong>số nguyên</strong> (VD: <code>1</code>, <code>2</code>, <code>10</code>) hoặc <strong>số thập phân dùng dấu phẩy</strong> (VD: <code>0,25</code>, <code>1,5</code>, <code>2,75</code>). Không nhập chữ cái hay ký tự lạ.`);
+          return;
+        }
+
+        // 3. Chuyển dấu phẩy thành dấu chấm để kiểm tra khoảng giá trị
         let numVal = parseFloat(rawScore.replace(',', '.'));
         if (isNaN(numVal) || numVal < 0.25 || numVal > 100) {
-          showModal(false, "Điểm không hợp lệ", "Vui lòng nhập số hoặc số thập phân từ <strong>0,25</strong> đến <strong>100</strong> (Sử dụng dấu phẩy để nhập số thập phân, ví dụ: <code>0,25</code> hoặc <code>1,5</code> hoặc <code>10</code>).");
+          showModal(false, "Điểm ngoài khoảng cho phép", `Điểm số phải từ <strong>0,25</strong> đến <strong>100</strong>. Giá trị bạn vừa nhập: <code class="text-rose-400 font-bold">${rawScore}</code>.`);
           return;
         }
 
@@ -1037,7 +1154,7 @@
       }
 
       const payload = {
-        lop: currentClass,
+        lop: lop,
         stt: stt,
         name: name,
         scoreType: scoreType,
@@ -1052,7 +1169,7 @@
       btn.innerHTML = `<span>Đang đồng bộ về Google Sheet...</span>`;
 
       try {
-        await fetch(SCRIPT_URL, {
+        await fetch(getScriptUrl(), {
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
@@ -1060,23 +1177,24 @@
         });
 
         const successMsg = scoreType === 'Điểm cộng theo tuần' 
-          ? `Đã ghi nhận/cập nhật điểm cộng cho: <strong>${name} (STT: ${stt}) - Lớp ${currentClass}</strong><br>${category} | Điểm: <strong class="text-indigo-400">${score}</strong><br><span class="text-xs text-slate-400 italic">(Nếu trước đó đã có điểm trong tuần này, hệ thống đã tự động ghi đè)</span>`
-          : `Đã lưu điểm kiểm tra cho: <strong>${name} (STT: ${stt}) - Lớp ${currentClass}</strong><br>Điểm số: <strong class="text-emerald-400">${score}</strong> | Ghi chú: ${note || "Không có"}`;
+          ? `Đã ghi nhận điểm cộng cho: <strong>${name} (STT: ${stt}) - Lớp ${lop}</strong><br>${category} | Điểm: <strong class="text-indigo-400">${score}</strong><br><span class="text-xs text-slate-400 italic">(Nếu trước đó đã có điểm trong tuần này, hệ thống tự động ghi đè)</span>`
+          : `Đã lưu điểm kiểm tra cho: <strong>${name} (STT: ${stt}) - Lớp ${lop}</strong><br>Điểm số: <strong class="text-emerald-400">${score}</strong> | Ghi chú: ${note || "Không có"}`;
 
         showModal(true, "Thành Công!", successMsg);
         
         document.getElementById(`${prefix}StudentSearch`).value = "";
         document.getElementById(`${prefix}StudentStt`).value = "";
         document.getElementById(`${prefix}StudentName`).value = "";
+        document.getElementById(`${prefix}StudentLop`).value = "";
         if (prefix === 'kt') {
           document.getElementById('ktScore').value = "";
           document.getElementById('ktNote').value = "";
         }
         
-        addHistoryItem(currentClass, name, stt, scoreType, category, score);
+        addHistoryItem(lop, name, stt, scoreType, category, score);
 
       } catch (err) {
-        showModal(false, "Lỗi kết nối", "Không thể gửi dữ liệu lên Google Sheets. Vui lòng kiểm tra lại kết nối.");
+        showModal(false, "Lỗi kết nối", "Không thể gửi dữ liệu lên Google Sheets. Vui lòng kiểm tra lại kết nối mạng hoặc link Web App Script.");
       } finally {
         btn.disabled = false;
         btn.innerHTML = originalText;
@@ -1084,7 +1202,7 @@
       }
     }
 
-    // 8. GỬI ĐIỂM NHÓM
+    // 7. GỬI ĐIỂM NHÓM
     async function handleGroupSubmit(e) {
       e.preventDefault();
 
@@ -1099,6 +1217,7 @@
         return;
       }
 
+      const nhomClass = document.getElementById('nhomClassSelect').value;
       const nhomName = document.getElementById('nhomSelect').value;
       const activity = document.getElementById('nhomActivity').value;
       const commonScore = document.getElementById('nhomCommonScore').value;
@@ -1114,7 +1233,7 @@
       });
 
       const payload = {
-        lop: currentClass,
+        lop: nhomClass,
         scoreType: "Điểm nhóm",
         category: `${nhomName} - ${activity}`,
         score: commonScore,
@@ -1128,20 +1247,20 @@
       btn.innerHTML = `<span>Đang đồng bộ ${memberList.length} học sinh...</span>`;
 
       try {
-        await fetch(SCRIPT_URL, {
+        await fetch(getScriptUrl(), {
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
 
-        showModal(true, "Đã Chấm Điểm Nhóm Thành Công!", `Lớp: <strong>${currentClass}</strong><br>Đã lưu điểm cho <strong>${memberList.length} thành viên</strong> thuộc <strong>${nhomName}</strong> (${activity}) với điểm số riêng từng bạn.`);
+        showModal(true, "Đã Chấm Điểm Nhóm Thành Công!", `Lớp: <strong>${nhomClass}</strong><br>Đã lưu điểm cho <strong>${memberList.length} thành viên</strong> thuộc <strong>${nhomName}</strong> (${activity}) với điểm số riêng từng bạn.`);
         
         document.querySelectorAll('.group-checkbox:checked').forEach(cb => cb.checked = false);
         handleGroupMemberCheckedChange();
         document.getElementById('nhomNote').value = '';
         
-        addHistoryItem(currentClass, nhomName, `${memberList.length} HS`, "Điểm nhóm", activity, `Nhóm: ${commonScore}`);
+        addHistoryItem(nhomClass, nhomName, `${memberList.length} HS`, "Điểm nhóm", activity, `Nhóm: ${commonScore}`);
 
       } catch (err) {
         showModal(false, "Lỗi kết nối", "Không thể gửi dữ liệu lên Google Sheets.");
