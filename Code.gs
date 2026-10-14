@@ -102,7 +102,27 @@ function getOrCreateAccountsSheet() {
 }
 
 /**
- * XỬ LÝ YÊU CẦU GET (TRA CỨU TÀI KHOẢN LIÊN KẾT)
+ * HÀM CHUYỂN ĐỔI CHUỖI ĐIỂM SANG SỐ THỰC CHUẨN HOẶC ĐỊNH DẠNG ĐÚNG CHO SHEET
+ * Chấp nhận cả "8.5", "8,5", "+1.5", "+1,5", v.v.
+ */
+function normalizeScoreValue(rawVal) {
+  if (rawVal === undefined || rawVal === null || rawVal === "") return "";
+  var str = String(rawVal).trim();
+  var isPlus = str.startsWith("+");
+  var cleanStr = str.replace(/^\+/, "").replace(/,/g, ".");
+  var num = parseFloat(cleanStr);
+  if (!isNaN(num)) {
+    // Nếu là điểm cộng có dấu + thì trả về chuỗi có dấu + kèm dấu phẩy (VD: "+1,5") hoặc số tuỳ ngữ cảnh
+    if (isPlus) {
+      return "+" + String(num).replace(/\./g, ",");
+    }
+    return num; // Trả về dạng Number để Google Sheet nhận diện chuẩn là Số
+  }
+  return rawVal;
+}
+
+/**
+ * XỬ LÝ YÊU CẦU GET (TRA CỨU TÀI KHOẢN LIÊN KẾT & XEM ĐIỂM CÁ NHÂN)
  */
 function doGet(e) {
   try {
@@ -128,6 +148,7 @@ function doGet(e) {
       }
     }
 
+    // 1. Kiểm tra trạng thái liên kết của email
     if (action === "check_email") {
       var targetEmail = (e.parameter.email || "").trim().toLowerCase();
       var found = accounts.find(function(a) { return a.email === targetEmail; });
@@ -138,7 +159,65 @@ function doGet(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // Mặc định trả về toàn bộ danh sách liên kết
+    // 2. Tra cứu điểm cá nhân của học sinh (BẢO MẬT: Chỉ trả về điểm của đúng học sinh đó)
+    if (action === "get_my_scores") {
+      var queryEmail = (e.parameter.email || "").trim().toLowerCase();
+      var queryLop = (e.parameter.lop || "").trim();
+      var queryStt = (e.parameter.stt || "").trim();
+
+      // Xác thực: nếu không phải giáo viên, bắt buộc phải có thông tin hợp lệ
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      var scoreSheet = ss.getSheetByName(SHEET_NAME_SCORES);
+      var myScores = [];
+
+      if (scoreSheet && scoreSheet.getLastRow() >= 2) {
+        var numRows = scoreSheet.getLastRow() - 1;
+        var scoreData = scoreSheet.getRange(2, 1, numRows, 9).getValues();
+
+        for (var sIdx = 0; sIdx < scoreData.length; sIdx++) {
+          var sRow = scoreData[sIdx];
+          var rTime = sRow[0];
+          var rLop = String(sRow[1]).trim();
+          var rStt = String(sRow[2]).trim();
+          var rName = String(sRow[3]).trim();
+          var rType = String(sRow[4]).trim();
+          var rCategory = String(sRow[5]).trim();
+          var rScore = sRow[6];
+          var rNote = String(sRow[7] || "").trim();
+          var rEmail = String(sRow[8] || "").trim().toLowerCase();
+
+          // Kiểm tra điều kiện trùng khớp:
+          // Trùng (Lớp & STT) HOẶC trùng Email đã đăng ký
+          var isMatch = false;
+          if (queryLop && queryStt && rLop === queryLop && rStt === queryStt) {
+            isMatch = true;
+          } else if (queryEmail && rEmail === queryEmail) {
+            isMatch = true;
+          }
+
+          if (isMatch) {
+            myScores.push({
+              time: rTime instanceof Date ? Utilities.formatDate(rTime, "GMT+7", "dd/MM/yyyy HH:mm") : String(rTime),
+              lop: rLop,
+              stt: rStt,
+              name: rName,
+              scoreType: rType,
+              category: rCategory,
+              score: rScore,
+              note: rNote
+            });
+          }
+        }
+      }
+
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        count: myScores.length,
+        scores: myScores
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 3. Toàn bộ danh sách liên kết tài khoản
     return ContentService.createTextOutput(JSON.stringify({
       status: "success",
       accounts: accounts
@@ -243,6 +322,7 @@ function doPost(e) {
       var rows = [];
       for (var i = 0; i < payload.students.length; i++) {
         var hs = payload.students[i];
+        var itemScore = hs.score !== undefined ? hs.score : (payload.score || "");
         rows.push([
           timestamp,
           payload.lop || "",
@@ -250,7 +330,7 @@ function doPost(e) {
           hs.name || "",
           payload.scoreType || "Điểm nhóm",
           payload.category || "",
-          hs.score !== undefined ? hs.score : (payload.score || ""),
+          normalizeScoreValue(itemScore),
           hs.note || payload.note || "",
           submitterEmail
         ]);
@@ -274,6 +354,7 @@ function doPost(e) {
       var lastRow = sheet.getLastRow();
       var isOverwritten = false;
       var overwrittenRow = -1;
+      var normalizedScore = normalizeScoreValue(payload.score);
 
       if (lastRow >= 2) {
         // Lấy toàn bộ dữ liệu cột B (Lớp), C (STT), E (Loại điểm), F (Tuần)
@@ -293,7 +374,7 @@ function doPost(e) {
             
             overwrittenRow = idx + 2; // Số hàng thực tế trên Sheet
             sheet.getRange(overwrittenRow, 1).setValue(timestamp); // Cập nhật thời gian mới
-            sheet.getRange(overwrittenRow, 7).setValue(payload.score); // Cập nhật điểm mới
+            sheet.getRange(overwrittenRow, 7).setValue(normalizedScore); // Cập nhật điểm mới
             sheet.getRange(overwrittenRow, 8).setValue(payload.note || ""); // Cập nhật ghi chú mới
             sheet.getRange(overwrittenRow, 9).setValue(submitterEmail); // Cập nhật Email người gửi
             
@@ -313,7 +394,7 @@ function doPost(e) {
           payload.name || "",
           payload.scoreType || "",
           payload.category || "",
-          payload.score !== undefined ? payload.score : "",
+          normalizedScore,
           payload.note || "",
           submitterEmail
         ]);
@@ -337,7 +418,7 @@ function doPost(e) {
         payload.name || "",
         payload.scoreType || "Điểm kiểm tra",
         payload.category || "Kiểm tra",
-        payload.score !== undefined ? payload.score : "",
+        normalizeScoreValue(payload.score),
         payload.note || "",
         submitterEmail
       ]);
