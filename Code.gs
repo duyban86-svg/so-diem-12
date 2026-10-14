@@ -159,53 +159,135 @@ function doGet(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // 2. Tra cứu điểm cá nhân của học sinh (BẢO MẬT: Chỉ trả về điểm của đúng học sinh đó)
+    // 2. Tra cứu điểm cá nhân của học sinh (BẢO MẬT: ĐỌC TỪ TRANG TÍNH TỔNG HỢP CỦA TỪNG LỚP)
     if (action === "get_my_scores") {
       var queryEmail = (e.parameter.email || "").trim().toLowerCase();
       var queryLop = (e.parameter.lop || "").trim();
       var queryStt = (e.parameter.stt || "").trim();
 
-      // Xác thực: nếu không phải giáo viên, bắt buộc phải có thông tin hợp lệ
       var ss = SpreadsheetApp.getActiveSpreadsheet();
-      var scoreSheet = ss.getSheetByName(SHEET_NAME_SCORES);
       var myScores = [];
+      var studentFoundName = "";
+      var studentFoundNote = "";
 
-      if (scoreSheet && scoreSheet.getLastRow() >= 2) {
-        var numRows = scoreSheet.getLastRow() - 1;
-        var scoreData = scoreSheet.getRange(2, 1, numRows, 9).getValues();
+      // 1. Tìm trang tính riêng của lớp (VD: "12A13", "12A08", "10A01", v.v.)
+      var classSheet = ss.getSheetByName(queryLop);
+      if (!classSheet) {
+        // Thử tìm các biến thể nếu có (VD: "Lớp 12A13")
+        classSheet = ss.getSheetByName("Lớp " + queryLop);
+      }
 
-        for (var sIdx = 0; sIdx < scoreData.length; sIdx++) {
-          var sRow = scoreData[sIdx];
-          var rTime = sRow[0];
-          var rLop = String(sRow[1]).trim();
-          var rStt = String(sRow[2]).trim();
-          var rName = String(sRow[3]).trim();
-          var rType = String(sRow[4]).trim();
-          var rCategory = String(sRow[5]).trim();
-          var rScore = sRow[6];
-          var rNote = String(sRow[7] || "").trim();
-          var rEmail = String(sRow[8] || "").trim().toLowerCase();
+      if (classSheet && classSheet.getLastRow() >= 2 && classSheet.getLastColumn() >= 4) {
+        var numRows = classSheet.getLastRow();
+        var numCols = classSheet.getLastColumn();
+        
+        // Đọc toàn bộ tiêu đề (Dòng 1) và dữ liệu học sinh
+        var allValues = classSheet.getRange(1, 1, numRows, numCols).getValues();
+        var headers = allValues[0]; // Dòng 1: [STT, Lớp, Họ và tên, Điểm cộng theo tuần, Điểm nhóm (1), Email, ...]
 
-          // Kiểm tra điều kiện trùng khớp:
-          // Trùng (Lớp & STT) HOẶC trùng Email đã đăng ký
-          var isMatch = false;
-          if (queryLop && queryStt && rLop === queryLop && rStt === queryStt) {
-            isMatch = true;
-          } else if (queryEmail && rEmail === queryEmail) {
-            isMatch = true;
+        // Tìm dòng của học sinh theo STT (Cột A - index 0)
+        var targetRowIndex = -1;
+        for (var r = 1; r < allValues.length; r++) {
+          var rowStt = String(allValues[r][0]).trim();
+          var rowEmail = (numCols >= 6 && allValues[r][5]) ? String(allValues[r][5]).trim().toLowerCase() : "";
+
+          if (queryStt && rowStt === queryStt) {
+            targetRowIndex = r;
+            break;
+          } else if (queryEmail && rowEmail === queryEmail) {
+            targetRowIndex = r;
+            break;
+          }
+        }
+
+        if (targetRowIndex !== -1) {
+          var targetRow = allValues[targetRowIndex];
+          studentFoundName = String(targetRow[2] || "").trim(); // Cột C: Họ và tên
+
+          // Duyệt tự động từ Cột D (index 3) đến hết cột cuối cùng bên phải
+          for (var c = 3; c < numCols; c++) {
+            var colTitle = String(headers[c] || "").trim();
+            var colVal = targetRow[c];
+
+            // Bỏ qua các cột chứa email hoặc không có tiêu đề
+            var lowerTitle = colTitle.toLowerCase();
+            if (!colTitle || lowerTitle.includes("email") || lowerTitle.includes("tài khoản") || lowerTitle.includes("tai khoan")) {
+              continue;
+            }
+
+            // Nếu là cột Ghi chú / Nhận xét của Thầy
+            if (lowerTitle.includes("ghi chú") || lowerTitle.includes("nhận xét") || lowerTitle.includes("lời dặn") || lowerTitle.includes("dặn dò")) {
+              if (colVal !== undefined && colVal !== null && String(colVal).trim() !== "") {
+                studentFoundNote += (studentFoundNote ? " | " : "") + String(colVal).trim();
+              }
+              continue;
+            }
+
+            // Nếu là cột điểm (có giá trị)
+            if (colVal !== undefined && colVal !== null && String(colVal).trim() !== "") {
+              var displayScore = colVal;
+              // Nếu là số thì định dạng dấu phẩy tiếng Việt cho đẹp
+              if (typeof colVal === "number") {
+                displayScore = String(colVal).replace(/\./g, ",");
+              }
+
+              myScores.push({
+                time: "Đã tổng hợp",
+                lop: queryLop,
+                stt: String(targetRow[0]).trim(),
+                name: studentFoundName,
+                scoreType: colTitle,
+                category: colTitle,
+                score: displayScore,
+                note: ""
+              });
+            }
           }
 
-          if (isMatch) {
-            myScores.push({
-              time: rTime instanceof Date ? Utilities.formatDate(rTime, "GMT+7", "dd/MM/yyyy HH:mm") : String(rTime),
-              lop: rLop,
-              stt: rStt,
-              name: rName,
-              scoreType: rType,
-              category: rCategory,
-              score: rScore,
-              note: rNote
-            });
+          // Gắn nhận xét vào mục đầu tiên nếu có
+          if (studentFoundNote && myScores.length > 0) {
+            myScores[0].note = studentFoundNote;
+          }
+        }
+      } 
+      // 2. Dự phòng: Nếu chưa có trang lớp tổng hợp, đọc từ trang DiemSo như cũ
+      else {
+        var scoreSheet = ss.getSheetByName(SHEET_NAME_SCORES);
+        if (scoreSheet && scoreSheet.getLastRow() >= 2) {
+          var numScoreRows = scoreSheet.getLastRow() - 1;
+          var scoreData = scoreSheet.getRange(2, 1, numScoreRows, 9).getValues();
+
+          for (var sIdx = 0; sIdx < scoreData.length; sIdx++) {
+            var sRow = scoreData[sIdx];
+            var rTime = sRow[0];
+            var rLop = String(sRow[1]).trim();
+            var rStt = String(sRow[2]).trim();
+            var rName = String(sRow[3]).trim();
+            var rType = String(sRow[4]).trim();
+            var rCategory = String(sRow[5]).trim();
+            var rScore = sRow[6];
+            var rNote = String(sRow[7] || "").trim();
+            var rEmail = String(sRow[8] || "").trim().toLowerCase();
+
+            var isMatch = false;
+            if (queryLop && queryStt && rLop === queryLop && rStt === queryStt) {
+              isMatch = true;
+            } else if (queryEmail && rEmail === queryEmail) {
+              isMatch = true;
+            }
+
+            if (isMatch) {
+              myScores.push({
+                time: rTime instanceof Date ? Utilities.formatDate(rTime, "GMT+7", "dd/MM/yyyy HH:mm") : String(rTime),
+                lop: rLop,
+                stt: rStt,
+                name: rName,
+                scoreType: rType,
+                category: rCategory,
+                score: rScore,
+                note: rNote
+              });
+            }
           }
         }
       }
@@ -213,6 +295,8 @@ function doGet(e) {
       return ContentService.createTextOutput(JSON.stringify({
         status: "success",
         count: myScores.length,
+        studentName: studentFoundName,
+        teacherNote: studentFoundNote,
         scores: myScores
       })).setMimeType(ContentService.MimeType.JSON);
     }

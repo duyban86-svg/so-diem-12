@@ -2373,6 +2373,20 @@
         }
 
         container.innerHTML = '';
+
+        // Nếu có Lời nhận xét chung từ trang lớp
+        if (data.teacherNote) {
+          const noteBanner = document.createElement('div');
+          noteBanner.className = 'p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/50 text-xs text-amber-200 flex items-start gap-2.5 mb-3';
+          noteBanner.innerHTML = `
+            <i data-lucide="message-circle" class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5"></i>
+            <div>
+              <strong class="text-amber-300 block text-xs">Lời dặn / Nhận xét của Giáo viên:</strong>
+              <p class="mt-0.5 text-slate-200">${data.teacherNote}</p>
+            </div>
+          `;
+          container.appendChild(noteBanner);
+        }
         // Đảo ngược để điểm mới nhất nằm trên cùng
         scores.slice().reverse().forEach(item => {
           const card = document.createElement('div');
