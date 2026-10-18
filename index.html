@@ -656,6 +656,63 @@
             </div>
           </div>
 
+          <!-- ============================================== -->
+          <!-- KHU VỰC PHẢN HỒI / THẮC MẮC ĐIỂM (PHƯƠNG ÁN B) -->
+          <!-- ============================================== -->
+          <div class="bg-slate-950/80 border border-teal-500/30 rounded-2xl p-4 sm:p-5 space-y-4">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+              <h4 class="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+                <i data-lucide="message-square-plus" class="w-4 h-4 text-teal-400"></i>
+                <span id="feedbackBoxTitle">Gửi Phản Hồi / Thắc Mắc Tới Giáo Viên</span>
+              </h4>
+              <span class="text-[10px] text-teal-300 font-bold bg-teal-950 px-2 py-0.5 rounded-full border border-teal-800/60">
+                HỖ TRỢ 2 CHIỀU
+              </span>
+            </div>
+
+            <!-- Form gửi phản hồi (dành cho Học sinh) -->
+            <form id="formStudentFeedback" onsubmit="handleSendFeedback(event)" class="space-y-3">
+              <div class="relative">
+                <textarea 
+                  id="feedbackContentInput" 
+                  rows="3" 
+                  required
+                  placeholder="Nhập thắc mắc hoặc phản hồi của bạn về điểm số (VD: Thưa Thầy, em xin phép hỏi về điểm nhóm bài 2 hoặc em có phát biểu tuần 5 nhưng chưa thấy cộng...)" 
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+                ></textarea>
+              </div>
+
+              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
+                <p class="text-[11px] text-slate-400 italic">
+                  💡 Thắc mắc của bạn sẽ được gửi trực tiếp đến trang quản lý của Thầy.
+                </p>
+                <button 
+                  type="submit" 
+                  id="btnSubmitFeedback" 
+                  class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-slate-950 font-black rounded-xl text-xs sm:text-sm shadow-lg shadow-teal-950/60 transition cursor-pointer flex items-center justify-center gap-2 flex-shrink-0"
+                >
+                  <i data-lucide="send" class="w-4 h-4"></i>
+                  <span>Gửi Phản Hồi Ngay</span>
+                </button>
+              </div>
+            </form>
+
+            <!-- Lịch sử các phản hồi đã gửi -->
+            <div class="pt-2 border-t border-slate-800/80">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <i data-lucide="history" class="w-3.5 h-3.5 text-teal-400"></i>
+                  <span>Lịch Sử Phản Hồi & Giải Đáp</span>
+                </span>
+                <span id="feedbackHistoryCount" class="text-[10px] text-slate-400 font-mono">0 phản hồi</span>
+              </div>
+              <div id="feedbackHistoryContainer" class="space-y-2.5 max-h-56 overflow-y-auto custom-scrollbar pr-1">
+                <div class="text-[11px] text-slate-500 italic py-3 text-center">Chưa có phản hồi nào.</div>
+              </div>
+            </div>
+
+          </div>
+
         </div>
       </div>
       <!-- HẾT TAB 4 -->
@@ -2428,6 +2485,169 @@
         container.innerHTML = `<div class="text-xs text-rose-400 py-6 text-center">Lỗi mạng khi tải điểm. Vui lòng thử lại sau!</div>`;
       } finally {
         lucide.createIcons();
+      }
+
+      // Tải lịch sử phản hồi
+      loadFeedbacks();
+    }
+
+    // =========================================================================
+    // 9. CHỨC NĂNG PHẢN HỒI / THẮC MẮC ĐIỂM (PHƯƠNG ÁN B)
+    // =========================================================================
+    async function handleSendFeedback(e) {
+      e.preventDefault();
+
+      if (!currentUser) {
+        showModal(false, "Yêu Cầu Đăng Nhập", "Bạn cần <strong>Đăng nhập Google</strong> để gửi phản hồi tới Giáo viên!");
+        return;
+      }
+
+      const isTeacher = isTeacherUser(currentUser.email);
+      let lop = "";
+      let stt = "";
+      let name = "";
+
+      if (isTeacher) {
+        lop = document.getElementById('teacherViewClassSelect')?.value || "GV";
+        stt = "0";
+        name = currentUser.name || "Giáo Viên";
+      } else if (boundStudent) {
+        lop = boundStudent.lop;
+        stt = boundStudent.stt;
+        name = boundStudent.name;
+      } else {
+        showModal(false, "Chưa Liên Kết", "Bạn cần liên kết danh tính học sinh trước khi gửi phản hồi!");
+        return;
+      }
+
+      const contentInput = document.getElementById('feedbackContentInput');
+      const content = (contentInput.value || "").trim();
+
+      if (!content) {
+        alert("Vui lòng nhập nội dung thắc mắc / phản hồi!");
+        return;
+      }
+
+      const btn = document.getElementById('btnSubmitFeedback');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span>Đang gửi phản hồi...</span>`;
+
+      const payload = {
+        action: "send_feedback",
+        lop: lop,
+        stt: stt,
+        name: name,
+        email: currentUser.email,
+        content: content
+      };
+
+      try {
+        await fetch(getScriptUrl(), {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        contentInput.value = "";
+        showModal(true, "Đã Gửi Phản Hồi Thành Công!", `Thắc mắc của bạn (<strong>${name} - ${lop}</strong>) đã được chuyển đến Giáo viên.<br><br>👉 Thầy sẽ xem xét và phản hồi trực tiếp cho bạn sớm nhất có thể.`);
+        
+        // Tải lại danh sách phản hồi sau 1 giây
+        setTimeout(loadFeedbacks, 1200);
+
+      } catch (err) {
+        showModal(false, "Lỗi kết nối", "Không thể gửi phản hồi. Vui lòng kiểm tra lại mạng hoặc thử lại sau!");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        lucide.createIcons();
+      }
+    }
+
+    async function loadFeedbacks() {
+      if (!currentUser) return;
+
+      const isTeacher = isTeacherUser(currentUser.email);
+      let queryLop = "";
+      let queryStt = "";
+
+      if (isTeacher) {
+        const selVal = document.getElementById('teacherViewStudentSelect')?.value;
+        if (selVal) {
+          try {
+            const parsed = JSON.parse(selVal);
+            queryLop = parsed.lop;
+            queryStt = parsed.stt;
+          } catch (e) {}
+        }
+      } else if (boundStudent) {
+        queryLop = boundStudent.lop;
+        queryStt = boundStudent.stt;
+      }
+
+      const fbContainer = document.getElementById('feedbackHistoryContainer');
+      const fbCount = document.getElementById('feedbackHistoryCount');
+      if (!fbContainer) return;
+
+      try {
+        let apiUrl = `${getScriptUrl()}?action=get_feedbacks&email=${encodeURIComponent(currentUser.email)}&lop=${encodeURIComponent(queryLop)}&stt=${encodeURIComponent(queryStt)}&is_teacher=${isTeacher}`;
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+
+        if (data.status === 'success' && Array.isArray(data.feedbacks)) {
+          const list = data.feedbacks;
+          if (fbCount) fbCount.innerText = `${list.length} phản hồi`;
+
+          if (list.length === 0) {
+            fbContainer.innerHTML = `<div class="text-[11px] text-slate-500 italic py-3 text-center">Chưa có phản hồi nào được ghi nhận.</div>`;
+            return;
+          }
+
+          fbContainer.innerHTML = '';
+          list.slice().reverse().forEach(fb => {
+            const item = document.createElement('div');
+            item.className = 'p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2 text-xs';
+
+            const isDone = fb.status && fb.status.toLowerCase().includes('đã');
+            const statusBadge = isDone
+              ? `<span class="text-[10px] bg-emerald-950 text-emerald-300 font-bold px-2 py-0.5 rounded border border-emerald-800 flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> ${fb.status}</span>`
+              : `<span class="text-[10px] bg-amber-950 text-amber-300 font-bold px-2 py-0.5 rounded border border-amber-800 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> ${fb.status || "Chờ xử lý"}</span>`;
+
+            const replyBox = fb.teacherReply 
+              ? `<div class="mt-2 p-2.5 rounded-lg bg-teal-950/50 border border-teal-500/40 text-teal-200">
+                   <strong class="text-teal-300 block text-[11px] flex items-center gap-1">
+                     <i data-lucide="corner-down-right" class="w-3.5 h-3.5"></i> Phản hồi từ Giáo viên:
+                   </strong>
+                   <span class="mt-0.5 block text-white">${fb.teacherReply}</span>
+                 </div>`
+              : `<div class="text-[10px] text-slate-500 italic flex items-center gap-1"><i data-lucide="hourglass" class="w-3 h-3"></i> Giáo viên đang xem xét thắc mắc này...</div>`;
+
+            item.innerHTML = `
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5 font-bold text-slate-200">
+                  <i data-lucide="message-square" class="w-3.5 h-3.5 text-teal-400"></i>
+                  <span>${fb.name} (${fb.lop} #${fb.stt})</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="font-mono text-[10px] text-slate-500">${fb.time}</span>
+                  ${statusBadge}
+                </div>
+              </div>
+
+              <div class="text-slate-300 bg-slate-950 p-2.5 rounded-lg border border-slate-800/80 leading-relaxed">
+                "${fb.content}"
+              </div>
+
+              ${replyBox}
+            `;
+            fbContainer.appendChild(item);
+          });
+
+          lucide.createIcons();
+        }
+      } catch (e) {
+        console.warn("Không thể tải lịch sử phản hồi:", e);
       }
     }
   </script>

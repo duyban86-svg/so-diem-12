@@ -12,6 +12,37 @@
 
 var SHEET_NAME_SCORES = "DiemSo";
 var SHEET_NAME_ACCOUNTS = "TaiKhoan";
+var SHEET_NAME_FEEDBACK = "PhanHoi";
+
+/**
+ * HÀM KHỞI TẠO HOẶC LẤY TAB PHẢN HỒI (HỌC SINH GỬI THẮC MẮC/Ý KIẾN)
+ */
+function getOrCreateFeedbackSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(SHEET_NAME_FEEDBACK);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME_FEEDBACK);
+    var headers = ["Thời gian gửi", "Lớp", "STT", "Họ và tên", "Email Google", "Nội dung phản hồi / Thắc mắc", "Trạng thái", "Phản hồi của Giáo viên"];
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    
+    var hRange = sheet.getRange(1, 1, 1, headers.length);
+    hRange.setFontWeight("bold").setFontSize(10.5).setFontFamily("Arial");
+    hRange.setBackground("#0f766e").setFontColor("#ffffff");
+    hRange.setHorizontalAlignment("center").setVerticalAlignment("middle");
+    sheet.setRowHeight(1, 36);
+    sheet.setFrozenRows(1);
+    
+    sheet.setColumnWidth(1, 150); // Thời gian
+    sheet.setColumnWidth(2, 80);  // Lớp
+    sheet.setColumnWidth(3, 70);  // STT
+    sheet.setColumnWidth(4, 180); // Họ tên
+    sheet.setColumnWidth(5, 230); // Email
+    sheet.setColumnWidth(6, 350); // Nội dung phản hồi
+    sheet.setColumnWidth(7, 120); // Trạng thái
+    sheet.setColumnWidth(8, 250); // Phản hồi của Giáo viên
+  }
+  return sheet;
+}
 
 /**
  * HÀM TỰ ĐỘNG CĂN CHỈNH & ĐỊNH DẠNG SHEET THEO ĐÚNG MẪU BẢNG ĐIỂM
@@ -301,7 +332,56 @@ function doGet(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // 3. Toàn bộ danh sách liên kết tài khoản
+    // 3. Lấy danh sách phản hồi (Dành cho học sinh xem phản hồi của mình hoặc Giáo viên xem toàn bộ)
+    if (action === "get_feedbacks") {
+      var queryEmail = (e.parameter.email || "").trim().toLowerCase();
+      var queryLop = (e.parameter.lop || "").trim();
+      var queryStt = (e.parameter.stt || "").trim();
+      var isTeacher = (e.parameter.is_teacher === "true");
+
+      var fbSheet = getOrCreateFeedbackSheet();
+      var lastRow = fbSheet.getLastRow();
+      var feedbacks = [];
+
+      if (lastRow >= 2) {
+        var fbData = fbSheet.getRange(2, 1, lastRow - 1, 8).getValues();
+        for (var f = 0; f < fbData.length; f++) {
+          var fbRow = fbData[f];
+          var fTime = fbRow[0];
+          var fLop = String(fbRow[1]).trim();
+          var fStt = String(fbRow[2]).trim();
+          var fName = String(fbRow[3]).trim();
+          var fEmail = String(fbRow[4] || "").trim().toLowerCase();
+          var fContent = String(fbRow[5] || "").trim();
+          var fStatus = String(fbRow[6] || "Chờ xử lý").trim();
+          var fReply = String(fbRow[7] || "").trim();
+
+          // Giáo viên xem được tất cả; Học sinh chỉ xem được phản hồi của mình
+          var canView = isTeacher || (queryLop && queryStt && fLop === queryLop && fStt === queryStt) || (queryEmail && fEmail === queryEmail);
+
+          if (canView) {
+            feedbacks.push({
+              time: fTime instanceof Date ? Utilities.formatDate(fTime, "GMT+7", "dd/MM/yyyy HH:mm") : String(fTime),
+              lop: fLop,
+              stt: fStt,
+              name: fName,
+              email: fEmail,
+              content: fContent,
+              status: fStatus,
+              teacherReply: fReply
+            });
+          }
+        }
+      }
+
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        count: feedbacks.length,
+        feedbacks: feedbacks
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 4. Toàn bộ danh sách liên kết tài khoản
     return ContentService.createTextOutput(JSON.stringify({
       status: "success",
       accounts: accounts
@@ -325,6 +405,47 @@ function doPost(e) {
   try {
     var payload = JSON.parse(e.postData.contents);
     var timestamp = new Date().toLocaleString("vi-VN");
+
+    // TRƯỜNG HỢP: HỌC SINH GỬI PHẢN HỒI / THẮC MẮC (ACTION: send_feedback)
+    if (payload.action === "send_feedback") {
+      var fbSheet = getOrCreateFeedbackSheet();
+      var email = String(payload.email || "").trim().toLowerCase();
+      var lop = String(payload.lop || "").trim();
+      var stt = String(payload.stt || "").trim();
+      var name = String(payload.name || "").trim();
+      var content = String(payload.content || "").trim();
+
+      if (!content) {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "error",
+          message: "Nội dung phản hồi không được để trống!"
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      fbSheet.appendRow([
+        timestamp,
+        lop,
+        stt,
+        name,
+        email,
+        content,
+        "Chờ xử lý",
+        ""
+      ]);
+
+      var newRow = fbSheet.getLastRow();
+      fbSheet.getRange(newRow, 1, 1, 8).setBackground("#ffffff").setFontFamily("Arial").setFontSize(10).setVerticalAlignment("middle");
+      fbSheet.getRange(newRow, 1).setHorizontalAlignment("center");
+      fbSheet.getRange(newRow, 2).setHorizontalAlignment("center");
+      fbSheet.getRange(newRow, 3).setHorizontalAlignment("center");
+      fbSheet.getRange(newRow, 7).setHorizontalAlignment("center").setFontWeight("bold").setFontColor("#b45309"); // Màu hổ phách Chờ xử lý
+      fbSheet.setRowHeight(newRow, 28);
+
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        message: "Phản hồi của bạn đã được gửi thành công đến Giáo viên!"
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
 
     // TRƯỜNG HỢP 0: LIÊN KẾT TÀI KHOẢN GOOGLE LẦN ĐẦU (SELF-BINDING)
     if (payload.action === "bind_account") {
