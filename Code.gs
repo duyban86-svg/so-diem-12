@@ -134,16 +134,21 @@ function getOrCreateAccountsSheet() {
 
 /**
  * HÀM CHUYỂN ĐỔI CHUỖI ĐIỂM SANG SỐ THỰC CHUẨN HOẶC ĐỊNH DẠNG ĐÚNG CHO SHEET
- * Chấp nhận cả "8.5", "8,5", "+1.5", "+1,5", v.v.
+ * Chấp nhận cả "8.5", "8,5", "+1.5", "+1,5", "-1", "-0,5", "-1,5", v.v.
  */
 function normalizeScoreValue(rawVal) {
   if (rawVal === undefined || rawVal === null || rawVal === "") return "";
   var str = String(rawVal).trim();
   var isPlus = str.startsWith("+");
-  var cleanStr = str.replace(/^\+/, "").replace(/,/g, ".");
+  var isMinus = str.startsWith("-");
+  var cleanStr = str.replace(/^[+-]/, "").replace(/,/g, ".");
   var num = parseFloat(cleanStr);
   if (!isNaN(num)) {
-    // Nếu là điểm cộng có dấu + thì trả về chuỗi có dấu + kèm dấu phẩy (VD: "+1,5") hoặc số tuỳ ngữ cảnh
+    // Nếu là điểm trừ có dấu - thì trả về chuỗi có dấu - kèm dấu phẩy (VD: "-1,5")
+    if (isMinus) {
+      return "-" + String(num).replace(/\./g, ",");
+    }
+    // Nếu là điểm cộng có dấu + thì trả về chuỗi có dấu + kèm dấu phẩy (VD: "+1,5")
     if (isPlus) {
       return "+" + String(num).replace(/\./g, ",");
     }
@@ -610,7 +615,7 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify({
         status: "success",
         isOverwritten: isOverwritten,
-        message: isOverwritten ? "Đã cập nhật (ghi đè) lại điểm cộng tuần thành công!" : "Đã ghi nhận điểm cộng tuần thành công!"
+        message: isOverwritten ? "Đã cập nhật (ghi đè) lại điểm tuần thành công!" : "Đã ghi nhận điểm tuần thành công!"
       })).setMimeType(ContentService.MimeType.JSON);
 
     } 

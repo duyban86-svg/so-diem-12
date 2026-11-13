@@ -177,8 +177,8 @@
         class="tab-btn flex items-center justify-center gap-1.5 sm:gap-2 py-3 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition duration-200 bg-indigo-600 text-white shadow-md shadow-indigo-600/30 cursor-pointer"
       >
         <span id="tabLockIcon-tuan"><i data-lucide="award" class="w-4 h-4"></i></span>
-        <span class="hidden md:inline">1. Điểm Cộng Tuần</span>
-        <span class="md:hidden">Điểm Cộng</span>
+        <span class="hidden md:inline">1. Điểm Tuần (Cộng/Trừ)</span>
+        <span class="md:hidden">Điểm Tuần</span>
       </button>
 
       <button 
@@ -283,7 +283,7 @@
               <div class="flex flex-wrap items-center gap-2 text-xs leading-relaxed">
                 <span class="font-bold text-amber-300 flex items-center gap-1">
                   <i data-lucide="info" class="w-3.5 h-3.5 text-amber-400"></i>
-                  NHẬP SỐ NGUYÊN HOẶC SỐ THẬP PHÂN TỪ 0,25
+                  HỖ TRỢ ĐIỂM CỘNG VÀ ĐIỂM TRỪ (CÓ DẤU - TRƯỚC SỐ)
                 </span>
                 <span class="font-black text-rose-300 bg-rose-950/90 px-2.5 py-1 rounded-lg border border-rose-500/80 shadow-md shadow-rose-950/50 uppercase tracking-wide inline-flex items-center gap-1 animate-pulse">
                   <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-rose-400"></i>
@@ -296,14 +296,14 @@
               <input 
                 type="text" 
                 id="tuanScore" 
-                inputmode="decimal"
-                placeholder="VD: 1 hoặc 0,25 hoặc 1,5..." 
+                inputmode="text"
+                placeholder="VD: 1 hoặc -1 hoặc 0,25 hoặc -0,5..." 
                 value="1,0" 
                 oninput="validateTuanScoreRealtime(this.value)"
                 required 
                 class="w-full sm:w-64 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold text-base focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
               />
-              <span class="text-xs text-slate-400 font-medium">Giá trị hợp lệ: 0,25 đến 100</span>
+              <span class="text-xs text-slate-400 font-medium">Hỗ trợ: -100 đến +100 (độ lớn từ 0,25)</span>
             </div>
 
             <!-- Cảnh báo lỗi trực tiếp dưới ô nhập điểm -->
@@ -315,24 +315,34 @@
 
           <!-- Ghi chú / Lý do -->
           <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Ghi Chú / Hoạt Động Được Cộng Điểm</label>
-            <div class="flex flex-wrap gap-1.5 mb-2">
-              <span onclick="setNoteQuick('tuan', 'Phát biểu xây dựng bài sôi nổi')" class="cursor-pointer text-[11px] bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60">Phát biểu sôi nổi</span>
-              <span onclick="setNoteQuick('tuan', 'Làm bài tập về nhà xuất sắc')" class="cursor-pointer text-[11px] bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60">Bài tập về nhà tốt</span>
-              <span onclick="setNoteQuick('tuan', 'Giải bài tập khó trên bảng')" class="cursor-pointer text-[11px] bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60">Giải bài tập khó</span>
-              <span onclick="setNoteQuick('tuan', 'Hỗ trợ bạn học tích cực')" class="cursor-pointer text-[11px] bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700/60">Hỗ trợ bạn</span>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Ghi Chú / Hoạt Động Được Cộng Điểm Hoặc Trừ Điểm</label>
+            <!-- Gợi ý cộng điểm -->
+            <div class="flex flex-wrap items-center gap-1.5 mb-2">
+              <span class="text-[10px] uppercase font-bold text-emerald-400 mr-0.5">Cộng điểm:</span>
+              <span onclick="setNoteQuickWithScore('tuan', 'Phát biểu xây dựng bài sôi nổi', '1,0')" class="cursor-pointer text-[11px] bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-700/60 transition">Phát biểu sôi nổi (+1,0)</span>
+              <span onclick="setNoteQuickWithScore('tuan', 'Làm bài tập về nhà xuất sắc', '1,0')" class="cursor-pointer text-[11px] bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-700/60 transition">Bài tập về nhà tốt (+1,0)</span>
+              <span onclick="setNoteQuickWithScore('tuan', 'Giải bài tập khó trên bảng', '0,5')" class="cursor-pointer text-[11px] bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-700/60 transition">Giải bài khó (+0,5)</span>
+              <span onclick="setNoteQuickWithScore('tuan', 'Hỗ trợ bạn học tích cực', '0,5')" class="cursor-pointer text-[11px] bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-700/60 transition">Hỗ trợ bạn (+0,5)</span>
+            </div>
+            <!-- Gợi ý trừ điểm -->
+            <div class="flex flex-wrap items-center gap-1.5 mb-2">
+              <span class="text-[10px] uppercase font-bold text-rose-400 mr-0.5">Trừ điểm:</span>
+              <span onclick="setNoteQuickWithScore('tuan', 'Chưa chuẩn bị bài / chưa soạn bài', '-1,0')" class="cursor-pointer text-[11px] bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 px-2.5 py-1 rounded-md border border-rose-700/60 transition">Chưa soạn bài (-1,0)</span>
+              <span onclick="setNoteQuickWithScore('tuan', 'Không làm bài tập về nhà', '-1,0')" class="cursor-pointer text-[11px] bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 px-2.5 py-1 rounded-md border border-rose-700/60 transition">Không làm bài tập (-1,0)</span>
+              <span onclick="setNoteQuickWithScore('tuan', 'Nói chuyện riêng / mất trật tự trong giờ', '-0,5')" class="cursor-pointer text-[11px] bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 px-2.5 py-1 rounded-md border border-rose-700/60 transition">Mất trật tự (-0,5)</span>
+              <span onclick="setNoteQuickWithScore('tuan', 'Không tập trung / vi phạm quy chế học tập', '-0,5')" class="cursor-pointer text-[11px] bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 px-2.5 py-1 rounded-md border border-rose-700/60 transition">Vi phạm quy chế (-0,5)</span>
             </div>
             <input 
               type="text" 
               id="tuanNote" 
-              placeholder="VD: Phát biểu bài 1, làm bài tập về nhà..." 
+              placeholder="VD: Phát biểu bài 1, làm bài tập về nhà, hoặc lý do trừ điểm..." 
               class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"
             />
           </div>
 
           <button type="submit" id="btnSubmitTuan" class="submit-btn w-full bg-gradient-to-r from-indigo-500 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 active:scale-[0.99] text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition cursor-pointer">
             <i data-lucide="plus-circle" class="w-5 h-5"></i>
-            <span>Ghi Nhận / Cập Nhật Điểm Cộng Tuần</span>
+            <span>Ghi Nhận / Cập Nhật Điểm Tuần</span>
           </button>
         </form>
       </div>
@@ -1863,7 +1873,19 @@
       document.getElementById(`${prefix}Note`).value = text;
     }
 
-    // Kiểm tra định dạng điểm tuần theo thời gian thực
+    function setNoteQuickWithScore(prefix, text, scoreVal) {
+      const noteEl = document.getElementById(`${prefix}Note`);
+      if (noteEl) noteEl.value = text;
+      if (scoreVal && prefix === 'tuan') {
+        const scoreInput = document.getElementById('tuanScore');
+        if (scoreInput) {
+          scoreInput.value = scoreVal;
+          validateTuanScoreRealtime(scoreVal);
+        }
+      }
+    }
+
+    // Kiểm tra định dạng điểm tuần theo thời gian thực (hỗ trợ cả điểm cộng và điểm trừ)
     function validateTuanScoreRealtime(val) {
       const alertBox = document.getElementById('tuanScoreLiveAlert');
       const alertText = document.getElementById('tuanScoreLiveAlertText');
@@ -1889,21 +1911,30 @@
         return;
       }
 
-      // 2. Cảnh báo khi nhập chữ hoặc ký tự lạ
-      if (!/^\d+(,\d*)?$/.test(trimmed)) {
+      // Khi người dùng mới gõ dấu trừ (-) hoặc dấu cộng (+) ở đầu
+      if (trimmed === '-' || trimmed === '+') {
+        alertBox.classList.add('hidden');
+        inputEl.classList.remove('border-rose-500', 'focus:ring-rose-500');
+        inputEl.classList.add('border-slate-700');
+        return;
+      }
+
+      // 2. Cảnh báo khi nhập sai định dạng số
+      if (!/^[+-]?\d+(,\d*)?$/.test(trimmed)) {
         alertBox.classList.remove('hidden');
-        alertText.innerHTML = `<span>⚠️ <strong>Sai định dạng số!</strong> Chỉ nhập số nguyên (VD: <code>1</code>, <code>2</code>) hoặc số thập phân dùng dấu phẩy (VD: <code>0,25</code>, <code>1,5</code>). Không nhập chữ cái hay ký tự lạ.</span>`;
+        alertText.innerHTML = `<span>⚠️ <strong>Sai định dạng số!</strong> Chỉ nhập số nguyên (VD: <code>1</code>, <code>-1</code>) hoặc số thập phân dùng dấu phẩy (VD: <code>0,25</code>, <code>-0,5</code>, <code>1,5</code>). Không nhập chữ cái hay ký tự lạ.</span>`;
         inputEl.classList.add('border-rose-500', 'focus:ring-rose-500');
         inputEl.classList.remove('border-slate-700');
         lucide.createIcons();
         return;
       }
 
-      // 3. Cảnh báo khi điểm ngoài khoảng 0,25 đến 100
-      const numVal = parseFloat(trimmed.replace(',', '.'));
-      if (isNaN(numVal) || numVal < 0.25 || numVal > 100) {
+      // 3. Cảnh báo khi độ lớn điểm ngoài khoảng 0,25 đến 100
+      const cleanNumStr = trimmed.replace(/^[+-]/, '').replace(',', '.');
+      const absVal = parseFloat(cleanNumStr);
+      if (isNaN(absVal) || absVal < 0.25 || absVal > 100) {
         alertBox.classList.remove('hidden');
-        alertText.innerHTML = `<span>⚠️ <strong>Điểm ngoài khoảng cho phép!</strong> Giá trị điểm phải từ <strong>0,25</strong> đến <strong>100</strong>.</span>`;
+        alertText.innerHTML = `<span>⚠️ <strong>Điểm ngoài khoảng cho phép!</strong> Độ lớn điểm phải từ <strong>0,25</strong> đến <strong>100</strong> (Hỗ trợ từ <strong>-100</strong> đến <strong>-0,25</strong> hoặc <strong>+0,25</strong> đến <strong>+100</strong>).</span>`;
         inputEl.classList.add('border-rose-500', 'focus:ring-rose-500');
         inputEl.classList.remove('border-slate-700');
         lucide.createIcons();
@@ -2118,20 +2149,27 @@
           return;
         }
 
-        // 2. Kiểm tra ký tự lạ
-        if (!/^\d+(,\d+)?$/.test(rawScore)) {
-          showModal(false, "Sai định dạng số", `Điểm số <code class="text-rose-400 font-bold">${rawScore}</code> không đúng định dạng!<br><br>Vui lòng chỉ nhập <strong>số nguyên</strong> hoặc <strong>số thập phân dùng dấu phẩy</strong> (VD: <code>0,25</code>, <code>1,5</code>). Không nhập chữ cái.`);
+        // 2. Kiểm tra định dạng số (cho phép dấu + hoặc - ở đầu)
+        if (!/^[+-]?\d+(,\d+)?$/.test(rawScore)) {
+          showModal(false, "Sai định dạng số", `Điểm số <code class="text-rose-400 font-bold">${rawScore}</code> không đúng định dạng!<br><br>Vui lòng nhập <strong>số nguyên</strong> hoặc <strong>số thập phân dùng dấu phẩy</strong> (VD: <code>1</code>, <code>-1</code>, <code>0,25</code>, <code>-0,5</code>, <code>1,5</code>). Không nhập chữ cái.`);
           return;
         }
 
-        // 3. Kiểm tra khoảng giá trị
-        let numVal = parseFloat(rawScore.replace(',', '.'));
-        if (isNaN(numVal) || numVal < 0.25 || numVal > 100) {
-          showModal(false, "Điểm ngoài khoảng cho phép", `Điểm số phải từ <strong>0,25</strong> đến <strong>100</strong>. Giá trị bạn vừa nhập: <code class="text-rose-400 font-bold">${rawScore}</code>.`);
+        // 3. Kiểm tra độ lớn điểm hợp lệ
+        let absVal = parseFloat(rawScore.replace(/^[+-]/, '').replace(',', '.'));
+        if (isNaN(absVal) || absVal < 0.25 || absVal > 100) {
+          showModal(false, "Điểm ngoài khoảng cho phép", `Độ lớn điểm phải từ <strong>0,25</strong> đến <strong>100</strong> (Hỗ trợ từ <strong>-100</strong> đến <strong>-0,25</strong> hoặc <strong>+0,25</strong> đến <strong>+100</strong>). Giá trị bạn vừa nhập: <code class="text-rose-400 font-bold">${rawScore}</code>.`);
           return;
         }
 
-        score = "+" + rawScore;
+        // Giữ nguyên dấu trừ (-) nếu nhập điểm trừ; giữ dấu (+) nếu có; thêm (+) nếu là số dương chưa có dấu
+        if (rawScore.startsWith('-')) {
+          score = rawScore;
+        } else if (rawScore.startsWith('+')) {
+          score = rawScore;
+        } else {
+          score = "+" + rawScore;
+        }
         note = document.getElementById('tuanNote').value.trim();
       } else {
         category = "Kiểm tra";
@@ -2470,7 +2508,7 @@
           const cleanScoreStr = String(item.score || '').replace(/^\+/, '').replace(',', '.');
           const numScore = parseFloat(cleanScoreStr);
 
-          if (type.includes('tuần') || type.includes('tuan')) {
+          if (type.includes('tuần') || type.includes('tuan') || type.includes('cộng') || type.includes('trừ')) {
             if (!isNaN(numScore)) sumTuan += numScore;
           } else if (type.includes('kiểm tra') || type.includes('kiem tra') || type.includes('kt')) {
             lastKtScore = item.score;
@@ -2479,7 +2517,14 @@
           }
         });
 
-        document.getElementById('statSumTuan').innerText = sumTuan > 0 ? `+${sumTuan}`.replace('.', ',') : '0';
+        let formattedSumTuan = '0';
+        const roundedSum = Math.round(sumTuan * 100) / 100;
+        if (roundedSum > 0) {
+          formattedSumTuan = `+${roundedSum}`.replace('.', ',');
+        } else if (roundedSum < 0) {
+          formattedSumTuan = `${roundedSum}`.replace('.', ',');
+        }
+        document.getElementById('statSumTuan').innerText = formattedSumTuan;
         document.getElementById('statLastKt').innerText = lastKtScore || '--';
         document.getElementById('statCountNhom').innerText = `${countNhom} bài`;
 
@@ -2508,10 +2553,18 @@
           `;
           container.appendChild(noteBanner);
         }
+
         // Đảo ngược để điểm mới nhất nằm trên cùng
         scores.slice().reverse().forEach(item => {
           const card = document.createElement('div');
           card.className = 'p-3.5 sm:p-4 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-sky-500/40 transition space-y-2';
+
+          const strScore = String(item.score || '').trim();
+          const isNegative = strScore.startsWith('-');
+          const scoreBadgeClass = isNegative 
+            ? 'text-rose-300 bg-rose-950/80 border-rose-700/80' 
+            : 'text-amber-300 bg-amber-950/70 border-amber-800/60';
+          const dotClass = isNegative ? 'bg-rose-500' : 'bg-sky-400';
 
           const noteHtml = item.note 
             ? `<div class="mt-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800/90 text-xs text-amber-200/90 flex items-start gap-2">
@@ -2526,12 +2579,12 @@
           card.innerHTML = `
             <div class="flex items-center justify-between gap-3">
               <div class="flex items-center gap-2 truncate">
-                <div class="w-2 h-2 rounded-full bg-sky-400 flex-shrink-0"></div>
+                <div class="w-2 h-2 rounded-full ${dotClass} flex-shrink-0"></div>
                 <strong class="text-white text-xs sm:text-sm font-semibold truncate">${item.category || item.scoreType}</strong>
               </div>
               <div class="flex items-center gap-1.5 flex-shrink-0">
                 <span class="text-xs text-slate-400 font-medium">Điểm:</span>
-                <span class="text-sm sm:text-base font-black text-amber-300 font-mono bg-amber-950/70 px-2.5 py-0.5 rounded-lg border border-amber-800/60 shadow-inner">${item.score}</span>
+                <span class="text-sm sm:text-base font-black ${scoreBadgeClass} font-mono px-2.5 py-0.5 rounded-lg border shadow-inner">${item.score}</span>
               </div>
             </div>
             
