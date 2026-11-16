@@ -13,6 +13,16 @@
 var SHEET_NAME_SCORES = "DiemSo";
 var SHEET_NAME_ACCOUNTS = "TaiKhoan";
 var SHEET_NAME_FEEDBACK = "PhanHoi";
+var PRIMARY_TEACHER_EMAIL = "duyban86@gmail.com";
+
+/**
+ * HÀM KIỂM TRA EMAIL CÓ PHẢI LÀ GIÁO VIÊN HAY KHÔNG
+ */
+function isTeacherEmail(email) {
+  if (!email) return false;
+  var clean = String(email).trim().toLowerCase();
+  return clean === PRIMARY_TEACHER_EMAIL;
+}
 
 /**
  * HÀM KHỞI TẠO HOẶC LẤY TAB PHẢN HỒI (HỌC SINH GỬI THẮC MẮC/Ý KIẾN)
@@ -559,15 +569,23 @@ function doPost(e) {
       })).setMimeType(ContentService.MimeType.JSON);
 
     } 
-    // TRƯỜNG HỢP 2: ĐIỂM CỘNG THEO TUẦN (KIỂM TRA ĐỂ GHI ĐÈ KẾT QUẢ CŨ TRONG CÙNG TUẦN)
+    // TRƯỜNG HỢP 2: ĐIỂM CỘNG / ĐIỂM TRỪ THEO TUẦN (KIỂM TRA ĐỂ GHI ĐÈ KẾT QUẢ CŨ PHÙ HỢP)
     else if (payload.scoreType === "Điểm cộng theo tuần") {
       var lastRow = sheet.getLastRow();
       var isOverwritten = false;
       var overwrittenRow = -1;
       var normalizedScore = normalizeScoreValue(payload.score);
 
+      // Phân loại lượt nộp hiện tại là Điểm trừ (-) hay Điểm cộng (+)
+      var isPayloadNegative = String(normalizedScore).trim().startsWith("-") || 
+                              String(payload.score).trim().startsWith("-") || 
+                              (typeof normalizedScore === "number" && normalizedScore < 0);
+
+      // Kiểm tra người gửi có phải là Giáo viên hay không
+      var isSubmitterTeacher = isTeacherEmail(submitterEmail) || (payload.isTeacher === true && isTeacherEmail(submitterEmail));
+
       if (lastRow >= 2) {
-        // Lấy toàn bộ dữ liệu cột B (Lớp), C (STT), E (Loại điểm), F (Tuần)
+        // Lấy toàn bộ dữ liệu cột B (Lớp), C (STT), E (Loại điểm), F (Tuần), G (Điểm), I (Email)
         var data = sheet.getRange(2, 1, lastRow - 1, 9).getValues();
         
         for (var idx = 0; idx < data.length; idx++) {
@@ -575,13 +593,38 @@ function doPost(e) {
           var rowStt = String(data[idx][2]).trim();
           var rowType = String(data[idx][4]).trim();
           var rowWeek = String(data[idx][5]).trim();
+          var rowScoreVal = data[idx][6];
+          var rowEmail = String(data[idx][8] || "").trim().toLowerCase();
 
-          // Nếu cùng Lớp, cùng STT, cùng là Điểm cộng tuần, và cùng Tuần -> GHI ĐÈ
+          // Phân loại dòng trên Sheet là Điểm trừ (-) hay Điểm cộng (+)
+          var isRowNegative = String(rowScoreVal).trim().startsWith("-") || 
+                              (typeof rowScoreVal === "number" && rowScoreVal < 0);
+          var isRowFromTeacher = isTeacherEmail(rowEmail);
+
+          // 1. Điều kiện tiên quyết: Cùng Lớp, cùng STT, cùng là Điểm tuần, và cùng Tuần
           if (rowClass === String(payload.lop).trim() && 
               rowStt === String(payload.stt).trim() && 
               rowType === "Điểm cộng theo tuần" && 
               rowWeek === String(payload.category).trim()) {
             
+            // 2. NGUYÊN TẮC BẢO VỆ 1: Phân tách Điểm cộng (+) và Điểm trừ (-)
+            // Điểm cộng KHÔNG ĐƯỢC ghi đè lên Điểm trừ, và Điểm trừ KHÔNG ĐƯỢC ghi đè lên Điểm cộng!
+            if (isPayloadNegative !== isRowNegative) {
+              continue; // Bỏ qua, hai bản ghi độc lập cùng tồn tại song song
+            }
+
+            // 3. NGUYÊN TẮC BẢO VỆ 2: Bảo vệ điểm của Giáo viên
+            // Dòng cũ do Giáo viên nhập -> Học sinh TUYỆT ĐỐI KHÔNG ĐƯỢC ghi đè!
+            if (isRowFromTeacher && !isSubmitterTeacher) {
+              continue; // Học sinh không thể ghi đè dòng của Giáo viên
+            }
+
+            // 4. Nếu là Học sinh nộp: Chỉ chính học sinh đó (hoặc Giáo viên) mới được ghi đè
+            if (!isSubmitterTeacher && rowEmail && rowEmail !== submitterEmail) {
+              continue; // Không được ghi đè dòng của học sinh khác
+            }
+
+            // Thỏa mãn toàn bộ điều kiện -> GHI ĐÈ lên đúng dòng cùng loại
             overwrittenRow = idx + 2; // Số hàng thực tế trên Sheet
             sheet.getRange(overwrittenRow, 1).setValue(timestamp); // Cập nhật thời gian mới
             sheet.getRange(overwrittenRow, 7).setValue(normalizedScore); // Cập nhật điểm mới
@@ -595,14 +638,14 @@ function doPost(e) {
         }
       }
 
-      // Nếu chưa có kết quả trong tuần này -> Thêm dòng mới
+      // Nếu chưa có dòng cùng loại phù hợp để ghi đè -> Thêm dòng mới độc lập
       if (!isOverwritten) {
         sheet.appendRow([
           timestamp,
           payload.lop || "",
           payload.stt || "",
           payload.name || "",
-          payload.scoreType || "",
+          payload.scoreType || "Điểm cộng theo tuần",
           payload.category || "",
           normalizedScore,
           payload.note || "",
@@ -612,10 +655,14 @@ function doPost(e) {
         formatDataRows(sheet, newRowNum, 1);
       }
 
+      var msg = isOverwritten 
+        ? (isPayloadNegative ? "Đã cập nhật lại điểm trừ tuần thành công!" : "Đã cập nhật (ghi đè) lại điểm cộng tuần thành công!")
+        : (isPayloadNegative ? "Đã ghi nhận điểm trừ tuần thành công!" : "Đã ghi nhận điểm cộng tuần thành công!");
+
       return ContentService.createTextOutput(JSON.stringify({
         status: "success",
         isOverwritten: isOverwritten,
-        message: isOverwritten ? "Đã cập nhật (ghi đè) lại điểm tuần thành công!" : "Đã ghi nhận điểm tuần thành công!"
+        message: msg
       })).setMimeType(ContentService.MimeType.JSON);
 
     } 
