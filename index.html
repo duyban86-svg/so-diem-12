@@ -319,18 +319,18 @@
             <!-- Gợi ý cộng điểm -->
             <div class="flex flex-wrap items-center gap-1.5 mb-2">
               <span class="text-[10px] uppercase font-bold text-emerald-400 mr-0.5">Cộng điểm:</span>
-              <span onclick="setNoteQuickWithScore('tuan', 'Phát biểu xây dựng bài sôi nổi', '1,0')" class="cursor-pointer text-[11px] bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-700/60 transition">Phát biểu sôi nổi (+1,0)</span>
-              <span onclick="setNoteQuickWithScore('tuan', 'Làm bài tập về nhà xuất sắc', '1,0')" class="cursor-pointer text-[11px] bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-700/60 transition">Bài tập về nhà tốt (+1,0)</span>
-              <span onclick="setNoteQuickWithScore('tuan', 'Giải bài tập khó trên bảng', '0,5')" class="cursor-pointer text-[11px] bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-700/60 transition">Giải bài khó (+0,5)</span>
-              <span onclick="setNoteQuickWithScore('tuan', 'Hỗ trợ bạn học tích cực', '0,5')" class="cursor-pointer text-[11px] bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-700/60 transition">Hỗ trợ bạn (+0,5)</span>
+              <span onclick="setNoteQuick('tuan', 'Phát biểu xây dựng bài sôi nổi')" class="cursor-pointer text-[11px] bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-700/60 transition">Phát biểu sôi nổi</span>
+              <span onclick="setNoteQuick('tuan', 'Làm bài tập về nhà xuất sắc')" class="cursor-pointer text-[11px] bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-700/60 transition">Bài tập về nhà tốt</span>
+              <span onclick="setNoteQuick('tuan', 'Giải bài tập khó trên bảng')" class="cursor-pointer text-[11px] bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-700/60 transition">Giải bài khó</span>
+              <span onclick="setNoteQuick('tuan', 'Hỗ trợ bạn học tích cực')" class="cursor-pointer text-[11px] bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-700/60 transition">Hỗ trợ bạn</span>
             </div>
             <!-- Gợi ý trừ điểm -->
             <div class="flex flex-wrap items-center gap-1.5 mb-2">
               <span class="text-[10px] uppercase font-bold text-rose-400 mr-0.5">Trừ điểm:</span>
-              <span onclick="setNoteQuickWithScore('tuan', 'Chưa chuẩn bị bài / chưa soạn bài', '-1,0')" class="cursor-pointer text-[11px] bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 px-2.5 py-1 rounded-md border border-rose-700/60 transition">Chưa soạn bài (-1,0)</span>
-              <span onclick="setNoteQuickWithScore('tuan', 'Không làm bài tập về nhà', '-1,0')" class="cursor-pointer text-[11px] bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 px-2.5 py-1 rounded-md border border-rose-700/60 transition">Không làm bài tập (-1,0)</span>
-              <span onclick="setNoteQuickWithScore('tuan', 'Nói chuyện riêng / mất trật tự trong giờ', '-0,5')" class="cursor-pointer text-[11px] bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 px-2.5 py-1 rounded-md border border-rose-700/60 transition">Mất trật tự (-0,5)</span>
-              <span onclick="setNoteQuickWithScore('tuan', 'Không tập trung / vi phạm quy chế học tập', '-0,5')" class="cursor-pointer text-[11px] bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 px-2.5 py-1 rounded-md border border-rose-700/60 transition">Vi phạm quy chế (-0,5)</span>
+              <span onclick="setNoteQuick('tuan', 'Chưa chuẩn bị bài / chưa soạn bài')" class="cursor-pointer text-[11px] bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 px-2.5 py-1 rounded-md border border-rose-700/60 transition">Chưa soạn bài</span>
+              <span onclick="setNoteQuick('tuan', 'Không làm bài tập về nhà')" class="cursor-pointer text-[11px] bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 px-2.5 py-1 rounded-md border border-rose-700/60 transition">Không làm bài tập</span>
+              <span onclick="setNoteQuick('tuan', 'Nói chuyện riêng / mất trật tự trong giờ')" class="cursor-pointer text-[11px] bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 px-2.5 py-1 rounded-md border border-rose-700/60 transition">Mất trật tự</span>
+              <span onclick="setNoteQuick('tuan', 'Không tập trung / vi phạm quy chế học tập')" class="cursor-pointer text-[11px] bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 px-2.5 py-1 rounded-md border border-rose-700/60 transition">Vi phạm quy chế</span>
             </div>
             <input 
               type="text" 
@@ -1871,18 +1871,6 @@
 
     function setNoteQuick(prefix, text) {
       document.getElementById(`${prefix}Note`).value = text;
-    }
-
-    function setNoteQuickWithScore(prefix, text, scoreVal) {
-      const noteEl = document.getElementById(`${prefix}Note`);
-      if (noteEl) noteEl.value = text;
-      if (scoreVal && prefix === 'tuan') {
-        const scoreInput = document.getElementById('tuanScore');
-        if (scoreInput) {
-          scoreInput.value = scoreVal;
-          validateTuanScoreRealtime(scoreVal);
-        }
-      }
     }
 
     // Kiểm tra định dạng điểm tuần theo thời gian thực (hỗ trợ cả điểm cộng và điểm trừ)
