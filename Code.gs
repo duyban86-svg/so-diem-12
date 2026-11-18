@@ -569,7 +569,7 @@ function doPost(e) {
       })).setMimeType(ContentService.MimeType.JSON);
 
     } 
-    // TRƯỜNG HỢP 2: ĐIỂM CỘNG / ĐIỂM TRỪ THEO TUẦN (KIỂM TRA ĐỂ GHI ĐÈ KẾT QUẢ CŨ PHÙ HỢP)
+    // TRƯỜNG HỢP 2: ĐIỂM CỘNG / ĐIỂM TRỪ THEO TUẦN (ĐIỂM TRỪ LUÔN ĐƯỢC GIỮ LẠI, KHÔNG GHI ĐÈ)
     else if (payload.scoreType === "Điểm cộng theo tuần") {
       var lastRow = sheet.getLastRow();
       var isOverwritten = false;
@@ -584,7 +584,9 @@ function doPost(e) {
       // Kiểm tra người gửi có phải là Giáo viên hay không
       var isSubmitterTeacher = isTeacherEmail(submitterEmail) || (payload.isTeacher === true && isTeacherEmail(submitterEmail));
 
-      if (lastRow >= 2) {
+      // NGUYÊN TẮC QUAN TRỌNG: MỌI ĐIỂM TRỪ ĐỀU ĐƯỢC GIỮ LẠI 100%, TUYỆT ĐỐI KHÔNG GHI ĐÈ!
+      // Vòng lặp tìm kiếm ghi đè CHỈ ÁP DỤNG CHO ĐIỂM CỘNG TUẦN (SỐ DƯƠNG)
+      if (!isPayloadNegative && lastRow >= 2) {
         // Lấy toàn bộ dữ liệu cột B (Lớp), C (STT), E (Loại điểm), F (Tuần), G (Điểm), I (Email)
         var data = sheet.getRange(2, 1, lastRow - 1, 9).getValues();
         
@@ -607,24 +609,22 @@ function doPost(e) {
               rowType === "Điểm cộng theo tuần" && 
               rowWeek === String(payload.category).trim()) {
             
-            // 2. NGUYÊN TẮC BẢO VỆ 1: Phân tách Điểm cộng (+) và Điểm trừ (-)
-            // Điểm cộng KHÔNG ĐƯỢC ghi đè lên Điểm trừ, và Điểm trừ KHÔNG ĐƯỢC ghi đè lên Điểm cộng!
-            if (isPayloadNegative !== isRowNegative) {
-              continue; // Bỏ qua, hai bản ghi độc lập cùng tồn tại song song
+            // 2. Tuyệt đối không ghi đè lên bất kỳ dòng điểm trừ nào!
+            if (isRowNegative) {
+              continue;
             }
 
-            // 3. NGUYÊN TẮC BẢO VỆ 2: Bảo vệ điểm của Giáo viên
-            // Dòng cũ do Giáo viên nhập -> Học sinh TUYỆT ĐỐI KHÔNG ĐƯỢC ghi đè!
+            // 3. Bảo vệ điểm của Giáo viên: Học sinh TUYỆT ĐỐI KHÔNG ĐƯỢC ghi đè
             if (isRowFromTeacher && !isSubmitterTeacher) {
-              continue; // Học sinh không thể ghi đè dòng của Giáo viên
+              continue;
             }
 
-            // 4. Nếu là Học sinh nộp: Chỉ chính học sinh đó (hoặc Giáo viên) mới được ghi đè
+            // 4. Nếu là Học sinh nộp: Chỉ chính học sinh đó (hoặc Giáo viên) mới được ghi đè dòng điểm cộng của mình
             if (!isSubmitterTeacher && rowEmail && rowEmail !== submitterEmail) {
-              continue; // Không được ghi đè dòng của học sinh khác
+              continue;
             }
 
-            // Thỏa mãn toàn bộ điều kiện -> GHI ĐÈ lên đúng dòng cùng loại
+            // Thỏa mãn toàn bộ điều kiện -> GHI ĐÈ lên dòng điểm cộng cũ
             overwrittenRow = idx + 2; // Số hàng thực tế trên Sheet
             sheet.getRange(overwrittenRow, 1).setValue(timestamp); // Cập nhật thời gian mới
             sheet.getRange(overwrittenRow, 7).setValue(normalizedScore); // Cập nhật điểm mới
@@ -638,7 +638,7 @@ function doPost(e) {
         }
       }
 
-      // Nếu chưa có dòng cùng loại phù hợp để ghi đè -> Thêm dòng mới độc lập
+      // Nếu là Điểm trừ (luôn thêm mới) HOẶC chưa có dòng điểm cộng phù hợp để ghi đè -> Thêm dòng mới
       if (!isOverwritten) {
         sheet.appendRow([
           timestamp,
@@ -655,9 +655,9 @@ function doPost(e) {
         formatDataRows(sheet, newRowNum, 1);
       }
 
-      var msg = isOverwritten 
-        ? (isPayloadNegative ? "Đã cập nhật lại điểm trừ tuần thành công!" : "Đã cập nhật (ghi đè) lại điểm cộng tuần thành công!")
-        : (isPayloadNegative ? "Đã ghi nhận điểm trừ tuần thành công!" : "Đã ghi nhận điểm cộng tuần thành công!");
+      var msg = isPayloadNegative
+        ? "Đã ghi nhận điểm trừ thành công (Tất cả điểm trừ đều được lưu riêng biệt làm minh chứng, không ghi đè)!"
+        : (isOverwritten ? "Đã cập nhật (ghi đè) lại điểm cộng tuần thành công!" : "Đã ghi nhận điểm cộng tuần thành công!");
 
       return ContentService.createTextOutput(JSON.stringify({
         status: "success",

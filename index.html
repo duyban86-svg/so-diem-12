@@ -229,7 +229,7 @@
         <!-- Lưu ý ghi đè -->
         <div class="mb-4 p-3 bg-indigo-950/60 border border-indigo-500/30 rounded-2xl flex items-center gap-2.5 text-xs text-indigo-300">
           <i data-lucide="info" class="w-4 h-4 flex-shrink-0 text-indigo-400"></i>
-          <span>Điểm cộng và Điểm trừ được quản lý độc lập. Học sinh nộp điểm cộng sẽ <strong>không làm mất điểm trừ</strong> của Giáo viên. Nếu nộp lại điểm cùng loại trong tuần, hệ thống sẽ tự động cập nhật kết quả mới nhất.</span>
+          <span><strong>Quy chuẩn lưu điểm:</strong> Tất cả các điểm trừ (do Thầy hay học sinh nhập) đều được <strong>giữ lại 100% (không ghi đè)</strong> để lưu vết minh chứng vi phạm. Chỉ có điểm cộng tuần nếu nộp lại mới cập nhật kết quả mới nhất.</span>
         </div>
 
         <form id="formTuan" class="tab-content space-y-6" onsubmit="handleSingleSubmit(event, 'Điểm cộng theo tuần')">
@@ -2204,7 +2204,9 @@
 
         const isNeg = String(score).trim().startsWith('-');
         const successMsg = scoreType === 'Điểm cộng theo tuần' 
-          ? `Đã ghi nhận điểm tuần cho: <strong>${name} (STT: ${stt}) - Lớp ${lop}</strong><br>${category} | Điểm: <strong class="${isNeg ? 'text-rose-400 font-black' : 'text-indigo-400 font-bold'}">${score}</strong><br><span class="text-xs text-slate-400 italic">(Điểm cộng và điểm trừ được lưu độc lập, không ghi đè chéo)</span>`
+          ? (isNeg 
+              ? `Đã ghi nhận điểm trừ cho: <strong>${name} (STT: ${stt}) - Lớp ${lop}</strong><br>${category} | Điểm: <strong class="text-rose-400 font-black">${score}</strong><br><span class="text-xs text-emerald-400 font-medium">✓ Tất cả các lần ghi điểm trừ đều được lưu giữ lại đầy đủ, không bao giờ bị ghi đè.</span>`
+              : `Đã ghi nhận điểm cộng cho: <strong>${name} (STT: ${stt}) - Lớp ${lop}</strong><br>${category} | Điểm: <strong class="text-indigo-400 font-bold">${score}</strong><br><span class="text-xs text-slate-400 italic">(Nếu trước đó đã có điểm cộng trong tuần này, hệ thống sẽ tự động cập nhật kết quả mới)</span>`)
           : `Đã lưu điểm kiểm tra cho: <strong>${name} (STT: ${stt}) - Lớp ${lop}</strong><br>Điểm số: <strong class="text-emerald-400">${score}</strong> | Ghi chú: ${note || "Không có"}`;
 
         showModal(true, "Thành Công!", successMsg);
